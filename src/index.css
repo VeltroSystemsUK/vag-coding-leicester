@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand: #00d2ff;
+  --color-brand-accent: #00a8cc;
+  --color-vw-blue: #001e50; /* VW Corporate Blue */
+  --color-dark-accent: #020617;
+}
+
+@layer base {
+  :root {
+    --bg: #ffffff;
+    --text: #001e50;
+    --card-bg: #f8f9fa;
+    --border: rgba(0, 30, 80, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+  }
+
+  .dark {
+    --bg: #050505;
+    --text: #ffffff;
+    --card-bg: #0f0f0f;
+    --border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(0, 0, 0, 0.6);
+  }
+
+  body {
+    @apply bg-[var(--bg)] text-[var(--text)] font-sans antialiased selection:bg-brand/30 transition-colors duration-300;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight text-[var(--text)];
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--border)];
+  }
+
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/5;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-brand hover:bg-brand-accent text-white font-semibold rounded-lg transition-all active:scale-95 shadow-lg shadow-brand/20;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-[var(--card-bg)] hover:bg-[var(--border)] text-[var(--text)] font-semibold rounded-lg transition-all active:scale-95 border border-[var(--border)];
+  }
+
+  .card-vw {
+    @apply bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-brand/10 hover:-translate-y-0.5;
+  }
+
+  /* Brand card: uses CSS variable set inline to pick up per-brand glow colour */
+  .card-brand {
+    @apply bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-6 transition-all duration-300;
+  }
+
+  .card-brand:hover {
+    box-shadow: 0 12px 32px -4px color-mix(in srgb, var(--brand-color, #00d2ff) 20%, transparent);
+    border-color: color-mix(in srgb, var(--brand-color, #00d2ff) 30%, transparent);
+    transform: translateY(-2px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[var(--bg)];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[var(--text)]/10 rounded-full hover:bg-[var(--text)]/20 transition-colors;
+}
