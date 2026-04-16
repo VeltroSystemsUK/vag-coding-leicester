@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { usePageSEO } from '../hooks/usePageSEO';
-import { ShoppingBag, Search, Filter, MessageSquare, ChevronRight, LayoutGrid, List, CreditCard, ShoppingCart, Shield } from 'lucide-react';
+import { ShoppingBag, Search, Filter, ChevronRight, LayoutGrid, List, CreditCard, Shield, Check } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { cn } from '../lib/utils';
-import { Link } from 'react-router-dom';
+import { useCart } from '../lib/CartContext';
 
 const categories = ['All', 'Cameras', 'Retrofits', 'Repairs', 'Parts'] as const;
 
@@ -39,7 +39,15 @@ export default function Shop() {
   const [activeCategory, setActiveCategory] = useState<typeof categories[number]>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [addedId, setAddedId] = useState<string | null>(null);
   const allProducts = useProducts();
+  const { addItem } = useCart();
+
+  const handleAddToCart = (product: typeof allProducts[0]) => {
+    addItem(product);
+    setAddedId(product.id);
+    setTimeout(() => setAddedId(null), 2000);
+  };
 
   const filteredProducts = allProducts.filter((product) => {
     const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
@@ -219,9 +227,26 @@ export default function Shop() {
                       </div>
 
                       <div className="flex flex-col gap-2 w-full md:w-auto">
-                        <button className="btn-primary py-3 px-6 text-xs uppercase tracking-widest flex items-center justify-center gap-2 group/btn shadow-lg shadow-brand/10">
-                          <ShoppingCart className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                          Add to Cart
+                        <button 
+                          onClick={() => handleAddToCart(product)}
+                          className={cn(
+                            "py-3 px-6 text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-brand/10 transition-all",
+                            addedId === product.id 
+                              ? "bg-green-500 text-white" 
+                              : "btn-primary group/btn"
+                          )}
+                        >
+                          {addedId === product.id ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              Added!
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingBag className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                              Add to Cart
+                            </>
+                          )}
                         </button>
                         <div className="flex items-center justify-center gap-1 text-[10px] text-[var(--text)]/40">
                           <span>Pay with:</span>

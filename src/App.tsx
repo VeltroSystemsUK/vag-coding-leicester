@@ -7,15 +7,17 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CartProvider } from './lib/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ChatBot from './components/ChatBot';
-import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Showcase from './pages/Showcase';
 import Contact from './pages/Contact';
 import Shop from './pages/Shop';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import Admin from './pages/Admin';
 import Info from './pages/Info';
 
@@ -46,6 +48,8 @@ function AppContent() {
             <Route path="/services" element={<Services />} />
             <Route path="/showcase" element={<Showcase />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/info" element={<Info />} />
             <Route path="/admin" element={<Admin />} />
@@ -61,7 +65,9 @@ function AppContent() {
 export default function App() {
   return (
     <Router>
-      <AppContent />
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
     </Router>
   );
 }

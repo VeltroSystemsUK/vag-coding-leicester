@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
+import CartIcon from './CartIcon';
 import { useTheme } from '../lib/ThemeContext';
 
 const languages = [
@@ -80,6 +81,7 @@ export default function Navbar() {
           ))}
           
           <div className="flex items-center gap-2 border-l border-[var(--border)] pl-6">
+            <CartIcon />
             <ThemeToggle />
             
             {/* Language Switcher */}
