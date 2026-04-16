@@ -160,7 +160,7 @@ export default function Home() {
               <div className="space-y-8">
                 {[
                   {
-                    title: 'OEM Style Installation',
+                    title: 'Full OEM Installation',
                     description: 'We pride ourselves on providing factory-standard finishes. No exposed wires or cheap workarounds.',
                   },
                   {

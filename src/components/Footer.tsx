@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Mail, MapPin } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Footer() {
@@ -45,12 +45,12 @@ export default function Footer() {
         <div>
           <h3 className="font-heading font-bold uppercase tracking-widest text-sm mb-6 text-white">Services</h3>
           <ul className="space-y-4 text-sm text-white/60">
-            <li><Link to="/services" className="hover:text-brand transition-colors">OEM Coding Activations</Link></li>
-            <li><Link to="/services" className="hover:text-brand transition-colors">Virtual Cockpit Retrofits</Link></li>
             <li><Link to="/services" className="hover:text-brand transition-colors">Apple CarPlay / Android Auto</Link></li>
+            <li><Link to="/services" className="hover:text-brand transition-colors">Virtual Cockpit Retrofits</Link></li>
+            <li><Link to="/services" className="hover:text-brand transition-colors">Dealer Level Diagnostics</Link></li>
             <li><Link to="/services" className="hover:text-brand transition-colors">Reverse Camera Installs</Link></li>
             <li><Link to="/services" className="hover:text-brand transition-colors">MIB Screen Upgrades</Link></li>
-            <li><Link to="/services" className="hover:text-brand transition-colors">VCDS Diagnostics</Link></li>
+            <li><Link to="/services" className="hover:text-brand transition-colors">Navigation Updates</Link></li>
           </ul>
         </div>
 
@@ -61,10 +61,6 @@ export default function Footer() {
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-brand shrink-0 mt-0.5" />
               <span>Unit 8, 171 Church Hill Road<br />Thurmaston, Leicester<br />LE4 8DD</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-brand shrink-0" />
-              <a href="tel:07943341362" className="hover:text-brand transition-colors">07943 341362</a>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-brand shrink-0" />

@@ -22,7 +22,7 @@ const services = [
   {
     icon: Cpu,
     title: 'ECU Coding & Hidden Feature Activation',
-    body: `Modern VAG group vehicles contain dozens of features that are disabled in software at the factory — either to differentiate trim levels or for market-specific regulations. Using VCDS and OBDeleven, we can unlock these features without any hardware modification.\n\nPopular activations include: needle sweep on startup, acoustic confirmation beep on lock/unlock, cornering lights, video in motion (front passenger screen), mirror dip on reverse, lap timer, digital speedometer overlay and much more. Every activation is reversible.`,
+    body: `Modern VAG group vehicles contain dozens of features that are disabled in software at the factory — either to differentiate trim levels or for market-specific regulations. Using dealer-level diagnostic tools and OBDeleven, we can unlock these features without any hardware modification.\n\nPopular activations include: needle sweep on startup, acoustic confirmation beep on lock/unlock, cornering lights, video in motion (front passenger screen), mirror dip on reverse, lap timer, digital speedometer overlay and much more. Every activation is reversible.`,
     compatible: ['All VAG group vehicles with VCDS/OBDeleven support'],
   },
   {
@@ -39,8 +39,8 @@ const services = [
   },
   {
     icon: Shield,
-    title: 'Diagnostics & Fault Finding',
-    body: `Warning lights on your dashboard can be concerning, but not every fault requires an expensive dealer visit. Using professional-grade VCDS diagnostic software, we can read all fault codes across every control module in your vehicle — engine, gearbox, ABS, airbags, comfort systems and more.\n\nWe provide a full diagnostic report, explain what each fault means and advise on the most cost-effective repair route. Many faults can be resolved through coding adjustments alone. We are fully mobile — we come to you.`,
+    title: 'Dealer Level Diagnostics & Fault Finding',
+    body: `Warning lights on your dashboard can be concerning, but not every fault requires an expensive dealer visit. Using professional-grade dealer-level diagnostic software, we can read all fault codes across every control module in your vehicle — engine, gearbox, ABS, airbags, comfort systems and more.\n\nWe provide a full diagnostic report, explain what each fault means and advise on the most cost-effective repair route. Many faults can be resolved through coding adjustments alone. We are fully mobile — we come to you.`,
     compatible: ['All VAG group vehicles'],
   },
   {
@@ -183,7 +183,7 @@ export default function Info() {
               regulations, or simply reduce production complexity.
             </p>
             <p>
-              VAG coding uses specialist software — primarily <strong className="text-[var(--text)]">VCDS (VAG-COM Diagnostic System)</strong> by
+              VAG coding uses specialist software — primarily <strong className="text-[var(--text)]">Dealer Level Diagnostics</strong> by
               Ross-Tech and <strong className="text-[var(--text)]">OBDeleven</strong> — to access these control units and modify their parameters.
               This can unlock hidden features, integrate new hardware, perform adaptations after part replacements or
               diagnose and clear faults to a level that main dealers charge hundreds of pounds for.
@@ -368,7 +368,7 @@ export default function Info() {
               { title: 'VAG Specialists Only', body: 'We work exclusively on VAG group vehicles. This focus means deeper knowledge and better results than a general garage.' },
               { title: 'Fully Mobile Service', body: 'We come to you — home, work or anywhere in Leicestershire. No dealership queues, no waiting rooms.' },
               { title: 'OEM-Standard Results', body: 'Every retrofit is factory-standard. Genuine parts, correct coding, clean installation — indistinguishable from new.' },
-              { title: 'Professional Equipment', body: 'Ross-Tech VCDS and OBDeleven Pro — the same tools used by VAG dealers, not cheap clone interfaces.' },
+              { title: 'Professional Equipment', body: 'Ross-Tech dealer-level diagnostic tools and OBDeleven Pro — the same tools used by VAG dealers, not cheap clone interfaces.' },
               { title: 'Transparent Pricing', body: 'We quote before we start and stick to it. No surprises, no hidden charges.' },
               { title: 'Fully Documented', body: 'All coding changes are recorded. Everything is reversible. You keep a full record of what was done to your car.' },
             ].map((item, i) => (
@@ -408,7 +408,7 @@ export default function Info() {
           </div>
           <p className="text-xs text-[var(--text)]/30 mt-6 flex items-center justify-center gap-2">
             <MapPin className="w-3 h-3" />
-            Unit 8, 171 Church Hill Road, Thurmaston, Leicester, LE4 8DD · 07943 341362
+            Unit 8, 171 Church Hill Road, Thurmaston, Leicester, LE4 8DD
           </p>
         </motion.div>
 

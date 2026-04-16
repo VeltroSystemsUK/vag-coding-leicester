@@ -1,8 +1,21 @@
+import React from 'react';
 import { motion } from 'motion/react';
-import { Cpu, Zap, Shield, Camera, Monitor, Radio } from 'lucide-react';
+import { Cpu, Zap, Shield, Camera, Monitor, Radio, Wrench, Activity, Gauge, Truck, ClipboardCheck, Car, Search, MapPin } from 'lucide-react';
 import { usePageSEO } from '../hooks/usePageSEO';
 
-const services = [
+interface ServiceItem {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  featured?: boolean;
+}
+
+interface ServiceCategory {
+  category: string;
+  items: ServiceItem[];
+}
+
+const services: ServiceCategory[] = [
   {
     category: 'Our Main Services',
     items: [
@@ -10,6 +23,49 @@ const services = [
         title: 'Apple CarPlay / Android Auto',
         description: 'Full activation of Apple CarPlay and Android Auto for MIB2 and MIB3 head units. Wireless options available.',
         icon: Radio,
+        featured: true,
+      },
+      {
+        title: 'Satellite Navigation Updates',
+        description: 'Latest map updates and navigation system activations. Stay up to date with the newest road layouts and points of interest.',
+        icon: MapPin,
+        featured: true,
+      },
+      {
+        title: 'Dealer Level Diagnostics',
+        description: 'Professional-grade vehicle health checks using dealer-level diagnostic equipment. Read and clear fault codes across all modules.',
+        icon: Activity,
+        featured: true,
+      },
+      {
+        title: 'Wiring & Soldering',
+        description: 'Expert automotive wiring and soldering services. Proper connections for retrofits, repairs and bespoke installations.',
+        icon: Zap,
+        featured: true,
+      },
+      {
+        title: 'Vehicle Health Checks',
+        description: 'Comprehensive pre-purchase inspections and vehicle health assessments. Know exactly what you\'re buying.',
+        icon: ClipboardCheck,
+        featured: true,
+      },
+      {
+        title: 'Car Buying Advice',
+        description: 'Professional guidance when buying your next VAG vehicle. We help you find the right car with the right specifications.',
+        icon: Car,
+        featured: true,
+      },
+      {
+        title: 'ECU Remapping',
+        description: 'Performance remapping for improved power and torque. Optimised tuning for economy or performance gains.',
+        icon: Gauge,
+        featured: true,
+      },
+      {
+        title: 'Fully Mobile Service',
+        description: 'We come to you — home, work or anywhere in Leicestershire. No need to visit a workshop.',
+        icon: Truck,
+        featured: true,
       },
       {
         title: 'MIB2 & MIB2.5 Screen Upgrades',
@@ -30,11 +86,6 @@ const services = [
         title: 'OEM Coding Activations',
         description: 'Unlock hidden features like needle sweep, acoustic lock, video in motion, and mirror dip on reverse.',
         icon: Shield,
-      },
-      {
-        title: 'Navigation & Map Updates',
-        description: 'Latest map updates and navigation system activations for all VAG group vehicles.',
-        icon: Zap,
       },
     ],
   },
@@ -84,7 +135,7 @@ export default function Services() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="card-vw group"
+                    className={`card-vw group ${item.featured ? 'ring-2 ring-brand ring-opacity-50' : ''}`}
                   >
                     <div className="w-12 h-12 bg-brand/10 rounded-lg flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
                       <item.icon className="w-6 h-6 text-brand group-hover:text-white transition-colors" />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';

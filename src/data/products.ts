@@ -15,6 +15,7 @@ export interface Product {
   category: 'Cameras' | 'Retrofits' | 'Repairs' | 'Parts';
   image: string;
   description: string;
+  condition: 'new' | 'used';
 }
 
 export const PRODUCTS: Product[] = [
@@ -25,6 +26,7 @@ export const PRODUCTS: Product[] = [
     category: 'Cameras',
     image: img336,
     description: 'High-quality reverse camera with dynamic guidelines for Golf MK7.',
+    condition: 'new',
   },
   {
     id: 'front-radar-cal',
@@ -33,6 +35,7 @@ export const PRODUCTS: Product[] = [
     category: 'Repairs',
     image: img337,
     description: 'Professional ADAS calibration for front radar sensors.',
+    condition: 'new',
   },
   {
     id: 'golf-mk7-climatronic',
@@ -41,6 +44,7 @@ export const PRODUCTS: Product[] = [
     category: 'Retrofits',
     image: img338,
     description: 'Modern touch-sensitive climate control panel upgrade.',
+    condition: 'used',
   },
   {
     id: 'sos-error-fix',
@@ -49,6 +53,7 @@ export const PRODUCTS: Product[] = [
     category: 'Repairs',
     image: img339,
     description: 'Permanent fix for the common VAG emergency call system error.',
+    condition: 'new',
   },
   {
     id: 'vw-t-roc-camera',
@@ -57,6 +62,7 @@ export const PRODUCTS: Product[] = [
     category: 'Cameras',
     image: img340,
     description: 'Full OEM integration reverse camera for VW T-Roc.',
+    condition: 'new',
   },
   {
     id: 'discover-media-repair',
@@ -65,6 +71,7 @@ export const PRODUCTS: Product[] = [
     category: 'Repairs',
     image: img341,
     description: 'LCD and digitizer repair for VAG Discover Media units.',
+    condition: 'used',
   },
   {
     id: 'vw-taigo-camera',
@@ -73,6 +80,7 @@ export const PRODUCTS: Product[] = [
     category: 'Cameras',
     image: img342,
     description: 'OEM reverse camera upgrade for the new VW Taigo.',
+    condition: 'new',
   },
   {
     id: 'golf-mib2-set',
@@ -81,6 +89,7 @@ export const PRODUCTS: Product[] = [
     category: 'Retrofits',
     image: img343,
     description: 'Complete Virtual Cockpit and MIB2.5 infotainment system upgrade.',
+    condition: 'used',
   },
   {
     id: 'most-connection',
@@ -89,5 +98,6 @@ export const PRODUCTS: Product[] = [
     category: 'Parts',
     image: img344,
     description: 'Fiber optic wiring for Virtual Cockpit integration.',
+    condition: 'used',
   },
 ];

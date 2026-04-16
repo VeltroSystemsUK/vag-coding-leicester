@@ -2,12 +2,25 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { usePageSEO } from '../hooks/usePageSEO';
-import { ShoppingBag, Search, Filter, MessageSquare, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { ShoppingBag, Search, Filter, MessageSquare, ChevronRight, LayoutGrid, List, CreditCard, ShoppingCart, Shield } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
 
 const categories = ['All', 'Cameras', 'Retrofits', 'Repairs', 'Parts'] as const;
+
+const PAYMENT_METHODS = [
+  { name: 'Visa', icon: '💳' },
+  { name: 'Mastercard', icon: '💳' },
+  { name: 'Apple Pay', icon: '🍎' },
+  { name: 'PayPal', icon: '🅿️' },
+  { name: 'Klarna', icon: '💳' },
+];
+
+const WARRANTY_INFO = {
+  new: '12 months warranty',
+  used: '28 days warranty - security seal applied',
+};
 
 export default function Shop() {
   const { t } = useTranslation();
@@ -197,15 +210,26 @@ export default function Shop() {
                       <div>
                         <span className="text-[10px] uppercase font-bold text-brand block tracking-widest mb-1">Price</span>
                         <span className="text-2xl font-bold text-vw-blue dark:text-white">{product.price}</span>
+                        <span className={cn(
+                          "text-[10px] block mt-1",
+                          product.condition === 'new' ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                        )}>
+                          {product.condition === 'new' ? WARRANTY_INFO.new : WARRANTY_INFO.used}
+                        </span>
                       </div>
 
-                      <Link
-                        to={`/contact?product=${encodeURIComponent(product.name)}`}
-                        className="btn-primary py-3 px-6 text-xs uppercase tracking-widest flex items-center gap-2 group/btn shadow-lg shadow-brand/10 w-full md:w-auto text-center justify-center"
-                      >
-                        Enquire
-                        <MessageSquare className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                      </Link>
+                      <div className="flex flex-col gap-2 w-full md:w-auto">
+                        <button className="btn-primary py-3 px-6 text-xs uppercase tracking-widest flex items-center justify-center gap-2 group/btn shadow-lg shadow-brand/10">
+                          <ShoppingCart className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                          Add to Cart
+                        </button>
+                        <div className="flex items-center justify-center gap-1 text-[10px] text-[var(--text)]/40">
+                          <span>Pay with:</span>
+                          {PAYMENT_METHODS.slice(0, 3).map(pm => (
+                            <span key={pm.name} title={pm.name}>{pm.icon}</span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -234,6 +258,52 @@ export default function Shop() {
             </button>
           </motion.div>
         )}
+
+        {/* Payment & Warranty Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8"
+        >
+          <div className="card-vw p-6">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-brand" />
+              Payment Methods
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {PAYMENT_METHODS.map(pm => (
+                <span key={pm.name} className="px-4 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm font-medium flex items-center gap-2">
+                  <span>{pm.icon}</span> {pm.name}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-[var(--text)]/40 mt-4">Secure checkout powered by Stripe. All major cards accepted.</p>
+          </div>
+
+          <div className="card-vw p-6">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-brand" />
+              Warranty Information
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3">
+                <span className="w-2 h-2 rounded-full bg-green-500 mt-2 shrink-0" />
+                <div>
+                  <span className="font-bold">New Equipment:</span>
+                  <span className="text-[var(--text)]/60"> 12 months warranty</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="w-2 h-2 rounded-full bg-amber-500 mt-2 shrink-0" />
+                <div>
+                  <span className="font-bold">Second Hand Equipment:</span>
+                  <span className="text-[var(--text)]/60"> 28 days warranty with security seal applied</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

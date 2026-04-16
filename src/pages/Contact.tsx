@@ -1,12 +1,12 @@
 import { motion } from 'motion/react';
-import { Mail, Phone, MapPin, Send, MessageSquare, Clock, CheckCircle2 } from 'lucide-react';
+import { Mail, MapPin, Send, MessageSquare, Clock, CheckCircle2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { usePageSEO } from '../hooks/usePageSEO';
 
 export default function Contact() {
   usePageSEO({
     title: 'Contact Us — Book a VAG Coding or Retrofit in Leicester',
-    description: 'Get in touch with VAG Leicester. Book ECU coding, Apple CarPlay, Virtual Cockpit or any retrofit service. Visit us at Unit 8, 171 Church Hill Road, Thurmaston, Leicester LE4 8DD or call 07943 341362.',
+    description: 'Get in touch with VAG Leicester. Book ECU coding, Apple CarPlay, Virtual Cockpit or any retrofit service. Visit us at Unit 8, 171 Church Hill Road, Thurmaston, Leicester LE4 8DD or email info@vagleicester.co.uk.',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -70,15 +70,6 @@ export default function Contact() {
               <ul className="space-y-6">
                 <li className="flex gap-4">
                   <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
-                    <Phone className="text-brand w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-[var(--text)]/40 mb-1">Call / WhatsApp</p>
-                    <a href="tel:07943341362" className="font-bold hover:text-brand transition-colors">07943 341362</a>
-                  </div>
-                </li>
-                <li className="flex gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
                     <Mail className="text-brand w-5 h-5" />
                   </div>
                   <div>
@@ -111,15 +102,18 @@ export default function Contact() {
               <ul className="space-y-3 text-sm">
                 <li className="flex justify-between">
                   <span className="text-[var(--text)]/50">Mon – Fri:</span>
-                  <span className="font-bold">09:00 – 18:00</span>
+                  <span className="font-bold">10:00 – 18:00</span>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-[var(--text)]/50">Saturday:</span>
-                  <span className="font-bold">10:00 – 16:00</span>
+                  <span className="font-bold">10:30 – 17:30</span>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-[var(--text)]/50">Sunday:</span>
                   <span className="text-brand font-bold uppercase tracking-widest text-[10px]">Closed</span>
+                </li>
+                <li className="pt-2 border-t border-[var(--border)] mt-2">
+                  <span className="text-xs text-[var(--text)]/40">After Hours by appointment only</span>
                 </li>
               </ul>
             </div>

@@ -54,7 +54,6 @@ function AppContent() {
       </main>
       {!isAdmin && <Footer />}
       {!isAdmin && <ChatBot />}
-      {!isAdmin && <WhatsAppButton />}
     </div>
   );
 }
