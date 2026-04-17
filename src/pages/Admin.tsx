@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
@@ -8,8 +8,6 @@ import Logo from '../components/Logo';
 
 type Tab = 'shop' | 'showcase';
 
-const ADMIN_PASSWORD = 'VAGLeicester2024!';
-
 export default function Admin() {
   const { isAuthenticated, login, logout } = useAdmin();
   const [password, setPassword] = useState('');
@@ -18,7 +16,7 @@ export default function Admin() {
   const [signing, setSigning] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('shop');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!password) return;
     setSigning(true);
@@ -30,7 +28,6 @@ export default function Admin() {
 
   const handleLogout = () => logout();
 
-  // ─── Login ──────────────────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4">
@@ -41,7 +38,6 @@ export default function Admin() {
           className="w-full max-w-sm"
         >
           <div className="mb-8 flex justify-center">
-            {/* Force dark background on logo in this always-dark admin page */}
             <div className="bg-black rounded-xl overflow-hidden p-1">
               <Logo className="h-14" />
             </div>
@@ -56,14 +52,14 @@ export default function Admin() {
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={password}
-                  onChange={e => { setPassword(e.target.value); setError(''); }}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Password"
                   autoFocus
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/25 outline-none focus:border-brand transition-colors pr-11 text-sm"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPw(v => !v)}
+                  onClick={() => setShowPw(!showPw)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
                 >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -83,7 +79,7 @@ export default function Admin() {
               <button
                 type="submit"
                 disabled={signing || !password}
-                className="w-full bg-brand hover:bg-brand-accent disabled:opacity-40 text-white font-bold text-sm uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#E30B18] hover:bg-[#c00915] disabled:opacity-40 text-white font-bold text-sm uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {signing && <Loader2 className="w-4 h-4 animate-spin" />}
                 Sign In
@@ -95,10 +91,8 @@ export default function Admin() {
     );
   }
 
-  // ─── Dashboard ──────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#050505] text-white">
-      {/* Header */}
       <div className="border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-black rounded-xl overflow-hidden p-0.5">
@@ -127,18 +121,17 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Tab Bar */}
       <div className="border-b border-white/[0.06] px-6 flex gap-1">
         {([
-          { id: 'shop'     as Tab, label: 'Shop',     Icon: ShoppingBag },
-          { id: 'showcase' as Tab, label: 'Showcase',  Icon: Camera      },
+          { id: 'shop' as Tab, label: 'Shop', Icon: ShoppingBag },
+          { id: 'showcase' as Tab, label: 'Showcase', Icon: Camera },
         ]).map(({ id, label, Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-2 py-4 px-2 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors ${
               activeTab === id
-                ? 'border-brand text-brand'
+                ? 'border-[#E30B18] text-[#E30B18]'
                 : 'border-transparent text-white/30 hover:text-white/60'
             }`}
           >
@@ -148,7 +141,6 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Content */}
       <div className="max-w-5xl mx-auto px-6 py-8">
         {activeTab === 'shop' ? <ShopManager /> : <ShowcaseManager />}
       </div>
