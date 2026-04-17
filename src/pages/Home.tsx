@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { usePageSEO } from '../hooks/usePageSEO';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, CheckCircle2, Star, Gauge, Volume2, Play, ChevronsRight, Smartphone, Lightbulb, RotateCcw, Timer, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import CountUp from '../components/CountUp';
 import InstagramFeed from '../components/InstagramFeed';
+import { useAdmin } from '../context/AdminContext';
 import oemAftermarketImg from '../assets/OEM-01.jpg';
 // Hero carousel images
 import heroImg0 from '../assets/Exterior -01.jpg';  // VW R at sunset — cinematic
@@ -14,7 +15,6 @@ import heroImg2 from '../assets/Dashboard-001.webp';  // GTI starlight headliner
 import heroImg3 from '../assets/Dashboard-012.jpg';  // VW Golf CarPlay + virtual cockpit
 import heroImg4 from '../assets/Exterior-03.png';  // Audi S3 exterior
 import heroImg5 from '../assets/Dashboard-013.jpg';  // Audi interior CarPlay
-import landcruiserImg from '../assets/Landcruiser.jpg';  // Japanese Import Landcruiser
 // Recent Work — three distinct job types
 import recentRetrofitImg  from '../assets/Dashboard-002.jpg';  // virtual cockpit
 import recentOemImg      from '../assets/OEM-02.jpg';  // OEM retrofits
@@ -25,11 +25,14 @@ const SLIDE_DURATION = 5000;
 
 export default function Home() {
   const { t } = useTranslation();
+  const { settings } = useAdmin();
   usePageSEO({
     title: 'VW Audi Coding, Retrofits & Diagnostics — Leicester',
     description: "Leicester's premier VAG group specialists. ECU coding, Apple CarPlay, Japanese to EU radio conversions, Virtual Cockpit retrofits, reverse cameras and diagnostics for VW, Audi, SEAT, Skoda, Porsche & Bentley. Mobile service across Leicestershire.",
   });
   const [slideIndex, setSlideIndex] = useState(0);
+  
+  const { carPlay: carPlayBanner, japaneseEu: japaneseEuBanner } = settings.promoBanners;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -250,128 +253,132 @@ export default function Home() {
       </section>
 
       {/* Apple CarPlay Featured Section */}
-      <section className="py-24 px-6 bg-[var(--card-bg)]">
-        <div className="max-w-7xl mx-auto">
-          <div className="card-vw p-8 md:p-12 rounded-[2rem] bg-gradient-to-br from-brand/5 to-transparent border-brand/20">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-widest mb-6">
-                  <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
-                  Most Popular Service
+      {carPlayBanner.active && (
+        <section className="py-24 px-6 bg-[var(--card-bg)]">
+          <div className="max-w-7xl mx-auto">
+            <div className="card-vw p-8 md:p-12 rounded-[2rem] bg-gradient-to-br from-brand/5 to-transparent border-brand/20">
+              <div className="flex flex-col lg:flex-row items-center gap-12">
+                <div className="flex-1">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-widest mb-6">
+                    <span className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                    {carPlayBanner.subtitle}
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 uppercase tracking-tight">
+                    <span className="text-brand">Apple CarPlay</span> & Android Auto
+                  </h2>
+                  <p className="text-[var(--text)]/60 text-lg mb-8 max-w-xl">
+                    Many VAG vehicles come with the hardware already installed but CarPlay/Android Auto disabled in the software. We can activate it in under an hour — no hardware changes needed.
+                  </p>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      Wired & Wireless CarPlay activation
+                    </li>
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      Android Auto integration
+                    </li>
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      Completed in under 1 hour
+                    </li>
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      All changes reversible
+                    </li>
+                  </ul>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Link to="/services" className="btn-primary inline-flex items-center gap-2 group">
+                      Get Started
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                    <Link to="/contact" className="btn-secondary">
+                      Contact Us
+                    </Link>
+                  </div>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-bold mb-6 uppercase tracking-tight">
-                  <span className="text-brand">Apple CarPlay</span> & Android Auto
-                </h2>
-                <p className="text-[var(--text)]/60 text-lg mb-8 max-w-xl">
-                  Many VAG vehicles come with the hardware already installed but CarPlay/Android Auto disabled in the software. We can activate it in under an hour — no hardware changes needed.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    Wired & Wireless CarPlay activation
-                  </li>
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    Android Auto integration
-                  </li>
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    Completed in under 1 hour
-                  </li>
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    All changes reversible
-                  </li>
-                </ul>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Link to="/services" className="btn-primary inline-flex items-center gap-2 group">
-                    Get Started
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                  <Link to="/contact" className="btn-secondary">
-                    Contact Us
-                  </Link>
-                </div>
-              </div>
-              <div className="flex-1 w-full max-w-md">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-brand/20">
-                  <img 
-                    src={heroImg2} 
-                    alt="Apple CarPlay on VW Golf" 
-                    className="w-full aspect-[4/3] object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <p className="text-white text-sm font-medium">Apple CarPlay on VW Golf MIB2</p>
+                <div className="flex-1 w-full max-w-md">
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-brand/20">
+                    <img 
+                      src={heroImg2} 
+                      alt="Apple CarPlay on VW Golf" 
+                      className="w-full aspect-[4/3] object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-white text-sm font-medium">Apple CarPlay on VW Golf MIB2</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Japanese to EU Radio Conversion Featured Section */}
-      <section className="py-24 px-6 bg-[var(--bg)]">
-        <div className="max-w-7xl mx-auto">
-          <div className="card-vw p-8 md:p-12 rounded-[2rem] bg-gradient-to-br from-brand/5 to-transparent border-brand/20">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              <div className="flex-1 w-full max-w-md order-2 lg:order-1">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-brand/20">
-                  <img 
-                    src={landcruiserImg} 
-                    alt="Japanese Import Vehicle" 
-                    className="w-full aspect-[4/3] object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <p className="text-white text-sm font-medium">Toyota Landcruiser - Japanese Import</p>
+      {japaneseEuBanner.active && (
+        <section className="py-24 px-6 bg-[var(--bg)]">
+          <div className="max-w-7xl mx-auto">
+            <div className="card-vw p-8 md:p-12 rounded-[2rem] bg-gradient-to-br from-brand/5 to-transparent border-brand/20">
+              <div className="flex flex-col lg:flex-row items-center gap-12">
+                <div className="flex-1 w-full max-w-md order-2 lg:order-1">
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-brand/20">
+                    <img 
+                      src={heroImg0} 
+                      alt="VAG Leicester - Japanese Import Radio Conversion" 
+                      className="w-full aspect-[4/3] object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-white text-sm font-medium">Japanese Import Radio Conversion</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex-1 order-1 lg:order-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-widest mb-6">
-                  <Globe className="w-3 h-3" />
-                  Specialist Service
-                </div>
-                <h2 className="text-3xl md:text-5xl font-bold mb-6 uppercase tracking-tight">
-                  <span className="text-brand">Japanese to EU</span> Radio Conversions
-                </h2>
-                <p className="text-[var(--text)]/60 text-lg mb-8 max-w-xl">
-                  Bought a Japanese import? We convert Japanese-market head units to work seamlessly with EU specification vehicles. Full integration with European GPS, DAB radio, and all vehicle systems.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    EU GPS navigation activation
-                  </li>
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    DAB radio compatibility
-                  </li>
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    Full vehicle system integration
-                  </li>
-                  <li className="flex items-center gap-3 text-[var(--text)]/80">
-                    <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
-                    Steering wheel controls working
-                  </li>
-                </ul>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Link to="/services" className="btn-primary inline-flex items-center gap-2 group">
-                    Learn More
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                  <Link to="/contact" className="btn-secondary">
-                    Get a Quote
-                  </Link>
+                <div className="flex-1 order-1 lg:order-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-widest mb-6">
+                    <Globe className="w-3 h-3" />
+                    {japaneseEuBanner.subtitle}
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 uppercase tracking-tight">
+                    <span className="text-brand">Japanese to EU</span> Radio Conversions
+                  </h2>
+                  <p className="text-[var(--text)]/60 text-lg mb-8 max-w-xl">
+                    Bought a Japanese import? We convert Japanese-market head units to work seamlessly with EU specification vehicles. Full integration with European GPS, DAB radio, and all vehicle systems.
+                  </p>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      EU GPS navigation activation
+                    </li>
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      DAB radio compatibility
+                    </li>
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      Full vehicle system integration
+                    </li>
+                    <li className="flex items-center gap-3 text-[var(--text)]/80">
+                      <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                      Steering wheel controls working
+                    </li>
+                  </ul>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Link to="/services" className="btn-primary inline-flex items-center gap-2 group">
+                      Learn More
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                    <Link to="/contact" className="btn-secondary">
+                      Get a Quote
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Popular Activations */}
       <section className="py-24 px-6 bg-[var(--card-bg)]">
