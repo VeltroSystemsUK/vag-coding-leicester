@@ -14,19 +14,21 @@ export default function ThemeToggle() {
       <motion.div
         initial={false}
         animate={{
-          y: theme === 'dark' ? 0 : 40,
+          y: theme === 'dark' ? 0 : -40,
           opacity: theme === 'dark' ? 1 : 0,
         }}
-        className="text-brand"
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 flex items-center justify-center text-brand"
       >
         <Moon className="w-5 h-5" />
       </motion.div>
       <motion.div
         initial={false}
         animate={{
-          y: theme === 'light' ? -20 : 20,
+          y: theme === 'light' ? 0 : 40,
           opacity: theme === 'light' ? 1 : 0,
         }}
+        transition={{ duration: 0.2 }}
         className="absolute inset-0 flex items-center justify-center text-vw-blue"
       >
         <Sun className="w-5 h-5" />

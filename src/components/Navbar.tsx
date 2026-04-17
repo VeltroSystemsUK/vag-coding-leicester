@@ -67,7 +67,7 @@ export default function Navbar() {
               to={link.path}
               className={cn(
                 'text-xs font-bold uppercase tracking-[0.2em] hover:text-brand transition-colors relative py-1',
-                location.pathname === link.path ? 'text-brand' : isDark ? 'text-white/70' : 'text-vw-blue/70'
+                location.pathname === link.path ? 'text-brand' : isDark ? 'text-white/70' : 'text-black/70'
               )}
             >
               {link.name}

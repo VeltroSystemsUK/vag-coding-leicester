@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Cpu, Zap, Shield, Camera, Monitor, Radio, Wrench, Activity, Gauge, Truck, ClipboardCheck, Car, Search, MapPin } from 'lucide-react';
+import { Cpu, Zap, Shield, Camera, Monitor, Radio, Wrench, Activity, Gauge, Truck, ClipboardCheck, Car, Search, MapPin, Globe } from 'lucide-react';
 import { usePageSEO } from '../hooks/usePageSEO';
 
 interface ServiceItem {
@@ -68,6 +68,12 @@ const services: ServiceCategory[] = [
         featured: true,
       },
       {
+        title: 'Japanese to EU Radio Conversions',
+        description: 'Convert Japanese-market head units to work with EU specification vehicles. Full GPS, DAB and system integration for imported vehicles.',
+        icon: Globe,
+        featured: true,
+      },
+      {
         title: 'MIB2 & MIB2.5 Screen Upgrades',
         description: 'Upgrade your older screen to the latest high-resolution glass displays for a modern look.',
         icon: Monitor,
@@ -94,7 +100,7 @@ const services: ServiceCategory[] = [
 export default function Services() {
   usePageSEO({
     title: 'Our Services — VW Audi Coding & Retrofits Leicester',
-    description: 'Apple CarPlay, Android Auto, Virtual Cockpit, reverse cameras, MIB screen upgrades, OEM coding activations and navigation updates for all VAG group vehicles in Leicester.',
+    description: 'Apple CarPlay, Android Auto, Japanese to EU radio conversions, Virtual Cockpit, reverse cameras, MIB screen upgrades, OEM coding activations and navigation updates for all VAG group vehicles in Leicester.',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',

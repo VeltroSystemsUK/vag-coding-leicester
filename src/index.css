@@ -17,7 +17,7 @@
 @layer base {
   :root {
     --bg: #ffffff;
-    --text: #001e50;
+    --text: #000000;
     --card-bg: #f8f9fa;
     --border: rgba(0, 30, 80, 0.1);
     --glass-bg: rgba(255, 255, 255, 0.8);

@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 const ELFSIGHT_APP_ID = 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX';
 
 // Also update your Instagram handle for the follow link:
-const INSTAGRAM_HANDLE = 'vagcodingleicester';
+const INSTAGRAM_HANDLE = 'vag-leicester';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function InstagramFeed() {

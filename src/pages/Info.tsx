@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import {
   Cpu, Zap, Shield, Camera, Monitor, Radio, ChevronRight,
-  CheckCircle2, HelpCircle, Star, Wrench, MapPin, Phone, Car
+  CheckCircle2, HelpCircle, Star, Wrench, MapPin, Phone, Car, Globe
 } from 'lucide-react';
 import { usePageSEO } from '../hooks/usePageSEO';
 
@@ -48,6 +48,12 @@ const services = [
     title: 'MIB2 & MIB3 Screen Upgrades',
     body: `The MIB2 and MIB3 are Volkswagen Group's modular infotainment platforms. Older MIB1 or entry-level MIB2 systems can be upgraded to higher-specification units with larger glass displays, faster processors, wireless CarPlay and improved functionality.\n\nWe source, install and fully code the replacement head unit so it works identically to a factory-fitted unit — including steering wheel controls, parking sensors, climate display integration and all coding parameters.`,
     compatible: ['VW Golf MK7/MK7.5', 'Audi A3', 'SEAT Leon MK3', 'Skoda Octavia MK3'],
+  },
+  {
+    icon: Globe,
+    title: 'Japanese to EU Radio Conversions',
+    body: `Bought a Japanese import? Many Japanese-market vehicles come with head units that are incompatible with European specifications — no EU GPS, no DAB radio, and steering wheel controls that don't work.\n\nWe specialise in converting Japanese-market head units to work seamlessly with EU specification vehicles. This includes activating EU GPS navigation, enabling DAB radio reception, and full integration with all vehicle systems including steering wheel controls, parking sensors and driver information display.\n\nWe support all major Japanese head unit brands including Panasonic, Fujitsu Ten (Alpine) and Pioneer that are commonly found in Japanese imports of VW, Audi, SEAT and Skoda vehicles.`,
+    compatible: ['VW Japanese Imports', 'Audi Japanese Imports', 'SEAT Japanese Imports', 'Skoda Japanese Imports'],
   },
 ];
 
@@ -99,7 +105,7 @@ const brands = [
 export default function Info() {
   usePageSEO({
     title: 'VAG Coding Guide — Services, FAQs & About Us',
-    description: 'Everything you need to know about VAG coding in Leicester. Apple CarPlay retrofits, Virtual Cockpit, ECU coding, diagnostics, compatible vehicles and FAQs. VAG Leicester — your local specialist.',
+    description: 'Everything you need to know about VAG coding in Leicester. Japanese to EU radio conversions, Apple CarPlay retrofits, Virtual Cockpit, ECU coding, diagnostics, compatible vehicles and FAQs. VAG Leicester — your local specialist.',
     jsonLd: [
       {
         '@context': 'https://schema.org',

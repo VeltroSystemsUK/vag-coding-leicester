@@ -1,64 +1,477 @@
 import { VAG_PORTFOLIO } from "../data/vagPortfolio";
 import { PRODUCTS } from "../data/products";
+import { compatibilityData } from "../data/compatibilityData";
 
-const CONTACT = {
-  email: "info@vagleicester.co.uk",
+const CONTACT_EMAIL = "info@vagleicester.co.uk";
+
+const BUSINESS_INFO = {
+  location: "Thurmaston, Leicester",
+  serviceArea: "Leicester, Leicestershire and surrounding areas",
+  experience: "10+ years",
+  vehiclesServiced: "5,000+",
+  rating: "4.9/5",
+  brands: ["Volkswagen", "Audi", "SEAT", "Skoda", "Porsche", "Bentley", "CUPRA"],
 };
 
-type Rule = { keywords: RegExp; reply: string };
+type ReplyFn = () => string;
 
-const rules: Rule[] = [
+const rules: { keywords: RegExp; reply: string | ReplyFn }[] = [
   {
-    keywords: /\b(book|appointment|schedule|when|available|availability)\b/i,
-    reply: `To book a session, just use our **Contact page** or email us on **${CONTACT.email}**. We're a mobile service so we come to you anywhere in Leicester and the surrounding area!`,
+    keywords: /\b(about|who are you|yourself|company|background)\b/i,
+    reply: () => [
+      "**VAG Leicester Ltd** is a specialist automotive coding and retrofit company based in **Thurmaston, Leicester**. With over **" + BUSINESS_INFO.experience + "** of hands-on experience working exclusively with VAG group vehicles, we've built a reputation for OEM-standard work at honest prices.",
+      "",
+      "We're fully **mobile** - we come to your home or workplace across Leicester, Leicestershire and surrounding areas. Every job is documented, all changes are reversible, and we use only genuine OEM parts for retrofits.",
+      "",
+      "**Our Stats:**",
+      "* " + BUSINESS_INFO.experience + " Experience",
+      "* " + BUSINESS_INFO.vehiclesServiced + " Vehicles Coded",
+      "* " + BUSINESS_INFO.rating + " Customer Rating",
+      "* Professional Ross-Tech VCDS & OBDeleven equipment",
+    ].join("\n"),
   },
   {
-    keywords: /\b(price|cost|how much|charge|fee|quote)\b/i,
-    reply: `Pricing varies by service and vehicle. For an accurate quote please email us on **${CONTACT.email}** or use the **Contact page**. We're happy to give a free no-obligation estimate.`,
+    keywords: /\b(book|appointment|schedule|when|available|availability|bookings)\b/i,
+    reply: () => [
+      "To book a session, just use our **Contact page** or email us on **" + CONTACT_EMAIL + "**. We're a **mobile service** so we come to you anywhere in " + BUSINESS_INFO.serviceArea + "!",
+      "",
+      "Provide your:",
+      "* Vehicle registration or VIN",
+      "* Which service you need",
+      "* Your preferred location",
+      "* Available dates/times",
+      "",
+      "We'll confirm availability and provide a quote within a few hours.",
+    ].join("\n"),
   },
   {
-    keywords: /\b(service|offer|do you|what can|capable|speciali[sz]e)\b/i,
-    reply: `We specialise in:\n\n**• ECU Coding & Programming** – enabling hidden features, retrofits, adaptations\n**• Dealer Level Diagnostics** – fault finding & diagnostic scanning\n**• Retrofits** – OEM features added to your car\n**• Software Updates** – latest factory firmware\n\nWe cover all VAG group vehicles: Audi, VW, SEAT, Škoda, Porsche & Bentley. See our **Services** page for the full list!`,
+    keywords: /\b(price|cost|how much|charge|fee|quote|estimate|budget)\b/i,
+    reply: () => {
+      const prices = [
+        "* **Simple Coding Activations:** From £50",
+        "* **Diagnostics:** From £50",
+        "* **Reverse Camera:** £420-£440",
+        "* **Front Radar Calibration:** £150",
+        "* **SOS Error Fix:** £150",
+        "* **Discover Media Repair:** £165",
+        "* **Golf MIB2 Set:** £1,400 (used, complete set)",
+        "* **Virtual Cockpit Retrofit:** Quote required (typically £800-£1500+ depending on model)",
+        "* **Screen Upgrade:** Quote required",
+        "* **CarPlay Activation:** Quote required",
+      ];
+      return [
+        "Here are typical prices for common services:",
+        "",
+        ...prices,
+        "",
+        "*Prices may vary based on your specific vehicle and requirements. Contact us for an accurate quote - we're happy to provide free, no-obligation estimates.*",
+      ].join("\n");
+    },
   },
   {
-    keywords: /\b(compatible|compatibility|my car|work on|support|year|model|mk|mk[0-9])\b/i,
-    reply: `Great question! Compatibility depends on your specific model, year and existing hardware. We cover the full VAG group — Audi, VW, SEAT, Škoda, Porsche and Bentley.\n\nFor a definitive answer, please give us your **reg or VIN** and email us on **${CONTACT.email}** and we'll check straight away.`,
+    keywords: /\b(service|offer|do you|what can|capable|speciali[sz]e|expert|help with)\b/i,
+    reply: () => [
+      "We specialise in the following services for VAG group vehicles:",
+      "",
+      "**CODING & PROGRAMMING:**",
+      "* ECU Coding & Hidden Feature Activation",
+      "* Apple CarPlay & Android Auto (wired & wireless)",
+      "* Navigation Activation & Map Updates",
+      "* Module Coding after Part Replacements",
+      "",
+      "**RETROFITS:**",
+      "* Virtual Cockpit (Digital Instrument Cluster)",
+      "* Reverse Camera Installation",
+      "* MIB2 & MIB3 Screen Upgrades",
+      "* Ambient Lighting",
+      "",
+      "**DIAGNOSTICS & REPAIRS:**",
+      "* Full Dealer-Level Diagnostic Scanning",
+      "* Fault Code Reading & Clearing",
+      "* ADAS Calibration",
+      "* Screen & Infotainment Repairs",
+      "",
+      "We cover: **" + BUSINESS_INFO.brands.join(", ") + "**",
+    ].join("\n"),
   },
   {
-    keywords: /\b(mobile|come to me|travel|location|where|based|leicester)\b/i,
-    reply: `Yes — we're fully **mobile**! We're based in Leicester and travel to your home, workplace, or anywhere that suits you. No need to drop your car off anywhere.`,
+    keywords: /\b(carplay|car play|android auto|applecarplay|androidauto|wired|wireless)\b/i,
+    reply: () => [
+      "**Apple CarPlay & Android Auto** is one of our most popular services!",
+      "",
+      "Many VAG vehicles have the hardware already installed but CarPlay/Android Auto disabled in the software. We can activate it using VCDS/OBDeleven coding - typically in under an hour.",
+      "",
+      "**What's available:**",
+      "* **Activation** - Enable CarPlay/Android Auto on existing MIB2/MIB3 units",
+      "* **Wireless Upgrade** - Add wireless functionality to compatible head units",
+      "* **Retrofit** - Install and code CarPlay module on vehicles without hardware",
+      "",
+      "**Compatible vehicles:** VW Golf MK7/MK7.5/MK8, Audi A3/A4/Q5, SEAT Leon MK3, Skoda Octavia MK3/MK4",
+      "",
+      "Get a quote by emailing **" + CONTACT_EMAIL + "** with your vehicle reg!",
+    ].join("\n"),
   },
   {
-    keywords: /\b(contact|phone|number|email|reach|get in touch|call|whatsapp|message)\b/i,
-    reply: `You can reach us anytime:\n\n✉️ **${CONTACT.email}**\n\nOr use the **Contact page** on this site to send us a message.`,
+    keywords: /\b(virtual cockpit|digital cluster|instrument cluster|digital dashboard)\b/i,
+    reply: () => [
+      "The **Virtual Cockpit** is a fully digital 10.25\" or 12.3\" TFT instrument cluster - replacing traditional dials with a configurable display showing speed, revs, navigation, media and more.",
+      "",
+      "**What we provide:**",
+      "* Sourcing of genuine OEM Virtual Cockpit units",
+      "* Professional installation",
+      "* Full VCDS coding to integrate with your car's systems",
+      "* Factory-standard finish - indistinguishable from factory-fitted",
+      "",
+      "**Compatible:** VW Golf MK7/MK7.5, Audi A3 8V, SEAT Leon MK3, Skoda Octavia MK3",
+      "",
+      "**Popular features enabled:**",
+      "* Multiple display layouts (Sport, Classic, Performance)",
+      "* Navigation integration",
+      "* Media display",
+      "* Driver assistance info",
+      "",
+      "Contact **" + CONTACT_EMAIL + "** for a quote - pricing varies by vehicle.",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(compatible|compatibility|my car|work on|support|does my|is my|will my)\b/i,
+    reply: () => {
+      const allModels: string[] = [];
+      compatibilityData.forEach(brand => {
+        brand.models.forEach(model => {
+          model.years.forEach(year => {
+            allModels.push("* " + model.name + " " + year.range + " (" + brand.brand + ")");
+          });
+        });
+      });
+      return [
+        "Great question! We work across the **entire VAG group**: " + BUSINESS_INFO.brands.join(", ") + ".",
+        "",
+        "**Commonly supported models include:**",
+        ...allModels.slice(0, 10),
+        "",
+        "Most VAG vehicles from **2012 onwards** support the majority of coding functions. The specific features depend on your head unit version, module hardware and build date.",
+        "",
+        "**To get a definitive answer:**",
+        "Email **" + CONTACT_EMAIL + "** with your **registration or VIN** and tell us what you'd like to do. We'll check exactly what's possible for your car!",
+      ].join("\n");
+    },
+  },
+  {
+    keywords: /\b(phone|number|whatsapp|telephone|call me)\b/i,
+    reply: () => [
+      "The best way to reach us is via **email** at **" + CONTACT_EMAIL + "** or use the **Contact page** on this website.",
+      "",
+      "We typically respond within a few hours during business hours. Provide your vehicle registration and what service you need and we'll get back to you quickly with availability and a quote!",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(mobile|come to me|travel|location|where|based|leicester|thurmaston|home visit)\b/i,
+    reply: () => [
+      "Yes - we're fully **mobile**!",
+      "",
+      "**Based in:** " + BUSINESS_INFO.location,
+      "**Service area:** " + BUSINESS_INFO.serviceArea,
+      "",
+      "We travel to your home, workplace, or anywhere convenient. **No need to drop your car off anywhere** - we bring our professional equipment to you.",
+      "",
+      "This means:",
+      "* No dealer queues",
+      "* No taking time off work",
+      "* No arranging alternative transport",
+      "* Work done while you wait (in most cases)",
+      "",
+      "Just provide your address when booking!",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(contact|email|reach|get in touch|message|write)\b/i,
+    reply: () => [
+      "You can reach us via:",
+      "",
+      ":email: **Email:** " + CONTACT_EMAIL,
+      "",
+      ":memo: **Contact Page:** Use the form on our website",
+      "",
+      "We aim to respond within a few hours during business hours. For the quickest response, include:",
+      "* Your vehicle registration or VIN",
+      "* The service you're interested in",
+      "* Your location (for mobile service)",
+    ].join("\n"),
   },
   {
     keywords: /\b(coding|vcds|obdeleven|hidden feature|unlock|enable|disable|adapt)\b/i,
-    reply: `Coding is our core service! Using dealer-level diagnostic tools and OBD Eleven we can:\n\n• Enable hidden factory features\n• Perform retrofits and adaptations\n• Code new modules after installation\n• Disable unwanted features\n\nEvery VAG car is different — email us **${CONTACT.email}** with your model and we'll tell you exactly what's possible.`,
+    reply: () => [
+      "**ECU Coding** is our core service! Using **Ross-Tech VCDS** (dealer-level) and **OBDeleven Pro**, we can:",
+      "",
+      "**Enable Hidden Features:**",
+      "* Needle sweep on startup",
+      "* Acoustic lock/unlock confirmation beep",
+      "* Cornering lights activation",
+      "* Video in motion (front passenger screen)",
+      "* Mirror dip on reverse",
+      "* Lap timer",
+      "* Digital speedometer overlay",
+      "* Ambient lighting expansion",
+      "* Performance monitor",
+      "* And many more...",
+      "",
+      "**Other Coding:**",
+      "* Perform retrofits and adaptations",
+      "* Code new modules after installation",
+      "* Disable unwanted features",
+      "* Module adaptations after part replacements",
+      "",
+      "Every VAG car is different - email **" + CONTACT_EMAIL + "** with your model and we'll tell you exactly what's possible!",
+    ].join("\n"),
   },
   {
-    keywords: /\b(diagnostic|fault|error|warning light|dtc|scan|check engine|p-code)\b/i,
-    reply: `We offer full **diagnostic scanning** across all VAG group vehicles using dealer-level equipment. We can read & clear fault codes, identify root causes and advise on the best fix.\n\nEmail **${CONTACT.email}** to book a diagnostic visit.`,
+    keywords: /\b(japan|japanese|import|eu conversion|radio conversion|dab radio|gps activation|timezone|region)\b/i,
+    reply: () => [
+      "**Japanese to EU Radio Conversions** are one of our specialist services!",
+      "",
+      "Bought a Japanese import vehicle? Many come with head units that are incompatible with European specifications.",
+      "",
+      "**Common issues we solve:**",
+      "* No EU GPS navigation (wrong maps/timezone)",
+      "* DAB radio not working",
+      "* Steering wheel controls non-functional",
+      "* Parking sensors not displaying",
+      "* Wrong language settings",
+      "",
+      "**What we provide:**",
+      "* EU GPS navigation activation",
+      "* DAB radio compatibility",
+      "* Full vehicle system integration",
+      "* Steering wheel control calibration",
+      "* Driver information display integration",
+      "",
+      "**Compatible:** Japanese imports of VW, Audi, SEAT, Skoda with Panasonic, Fujitsu Ten (Alpine) and Pioneer head units.",
+      "",
+      "Contact **" + CONTACT_EMAIL + "** with your vehicle details for a quote!",
+    ].join("\n"),
   },
   {
-    keywords: /\b(product|shop|buy|part|item|accessories)\b/i,
-    reply: (() => {
-      const sample = PRODUCTS.slice(0, 3).map(p => `• ${p.name} — £${p.price}`).join('\n');
-      return `Check out our **Shop** page for parts and accessories. Popular items include:\n\n${sample}\n\nFor custom orders or bulk pricing, contact us on **${CONTACT.email}**.`;
-    })(),
+    keywords: /\b(diagnostic|fault|error|warning light|dtc|scan|check engine|p-code|misfire)\b/i,
+    reply: () => [
+      "We offer full **dealer-level diagnostics** across all VAG group vehicles.",
+      "",
+      "**What we check:**",
+      "* Engine control module",
+      "* Transmission/gearbox",
+      "* ABS & stability control",
+      "* Airbag systems",
+      "* Comfort & infotainment modules",
+      "* All other control units",
+      "",
+      "**Process:**",
+      "1. Full scan of all modules",
+      "2. Read & document all fault codes",
+      "3. Clear faults (where safe to do so)",
+      "4. Provide detailed report explaining each fault",
+      "5. Advise on most cost-effective repair route",
+      "",
+      "**Many faults can be resolved through coding alone!** No expensive dealer visit needed.",
+      "",
+      "Email **" + CONTACT_EMAIL + "** to book a diagnostic visit.",
+    ].join("\n"),
   },
   {
-    keywords: /\b(audi|vw|volkswagen|seat|skoda|porsche|bentley)\b/i,
-    reply: (() => {
-      const brands = [...new Set(VAG_PORTFOLIO.map(v => v.brand))].join(', ');
-      return `We work across the entire VAG group: **${brands}**.\n\nEach brand shares the same underlying architecture, so we can code and retrofit across the full range. Tell us your model and we'll confirm what's possible — email us **${CONTACT.email}**.`;
-    })(),
+    keywords: /\b(reverse camera|backup camera|parking camera|camera installation)\b/i,
+    reply: () => [
+      "We install **genuine OEM reverse cameras** that integrate seamlessly with your existing infotainment screen.",
+      "",
+      "**What's included:**",
+      "* OEM camera unit (genuine VAG part)",
+      "* Full wiring integration",
+      "* Coding to work with your car's systems",
+      "* Dynamic guidelines (where supported)",
+      "* Auto-activate when reverse is selected",
+      "",
+      "**Popular kits available:**",
+      "* VW Golf MK7 Highline Camera - £420",
+      "* VW T-Roc Reverse Camera - £440",
+      "* VW Taigo Reverse Camera - £420",
+      "",
+      "All cameras include professional installation and coding. **No aftermarket screens required** - displays on your existing unit.",
+      "",
+      "Contact **" + CONTACT_EMAIL + "** with your vehicle to check compatibility!",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(product|shop|buy|part|item|accessories|golf|climatronic|mib2|discover)\b/i,
+    reply: () => {
+      const products = PRODUCTS.map(p => "* **" + p.name + "** - " + p.price + " (" + p.condition + ")").join("\n");
+      return [
+        "Check out our **Shop page** for parts and accessories. Here's our current inventory:",
+        "",
+        products,
+        "",
+        "**Categories:**",
+        "* **Cameras** - Reverse camera kits",
+        "* **Retrofits** - Virtual Cockpit, MIB2 upgrades",
+        "* **Repairs** - Front radar calibration, SOS error fix, screen repair",
+        "* **Parts** - MOST wiring, connectors",
+        "",
+        "All items include professional installation if needed. For custom orders or bulk pricing, contact us on **" + CONTACT_EMAIL + "**.",
+      ].join("\n");
+    },
+  },
+  {
+    keywords: /\b(audi|vw|volkswagen|seat|skoda|porsche|bentley|cupra)\b/i,
+    reply: () => {
+      const brandsList = BUSINESS_INFO.brands.map(b => "* **" + b + "**").join("\n");
+      return [
+        "We work across the **entire VAG group**!",
+        "",
+        "**Brands we cover:**",
+        brandsList,
+        "",
+        "Each brand shares the same underlying architecture, so we can code and retrofit across the full range using the same professional tools (Ross-Tech VCDS & OBDeleven).",
+        "",
+        "Popular models we work on:",
+        "* VW: Golf, Polo, Passat, Tiguan, T-Roc, ID.4",
+        "* Audi: A3, A4, A5, Q3, Q5, TT, RS range",
+        "* SEAT/CUPRA: Leon, Formentor, Ateca, Born",
+        "* Skoda: Octavia, Superb, Kodiaq, Karoq",
+        "",
+        "Tell us your model and we'll confirm what's possible - email **" + CONTACT_EMAIL + "**!",
+      ].join("\n");
+    },
+  },
+  {
+    keywords: /\b(safe|safe\?|void warranty|warranty|reversible|damage|break)\b/i,
+    reply: () => [
+      "Great question about safety and warranty:",
+      "",
+      "**Is coding safe?**",
+      "Yes - when performed by a qualified specialist using professional tools, coding is safe and non-destructive. We use genuine Ross-Tech VCDS (the same tool dealers use) and OBDeleven Pro.",
+      "",
+      "**Is it reversible?**",
+      "Absolutely! Every change we make can be **fully reverted to factory settings**. We document all changes made to your vehicle.",
+      "",
+      "**Will it void my warranty?**",
+      "In the UK, dealers **cannot void your warranty solely because the car has been coded** - they must prove the coding caused the specific fault being claimed. We document all work for your protection.",
+      "",
+      "**Our approach:**",
+      "* Professional-grade equipment only",
+      "* No \"cheap clone\" interfaces",
+      "* All changes recorded and reversible",
+      "* OEM parts for retrofits",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(tool|equipment|vcds|obdeleven|ross-tech)\b/i,
+    reply: () => [
+      "We use **professional-grade equipment only**:",
+      "",
+      "* **Ross-Tech VCDS (VAG-COM Diagnostic System)** - The industry-standard dealer-level tool for VAG vehicles. Same software used by main dealers worldwide.",
+      "",
+      "* **OBDeleven Pro** - Advanced diagnostic and coding device with smartphone integration.",
+      "",
+      "We do NOT use cheap clone interfaces or unbranded diagnostic tools. This ensures:",
+      "* Full module access",
+      "* Accurate fault reading",
+      "* Safe coding procedures",
+      "* Proper adaptation routines",
+      "",
+      "All changes are documented and fully reversible.",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(how long|time|hours|duration|session|appointment length)\b/i,
+    reply: () => [
+      "Typical service times:",
+      "",
+      "* **Simple coding activations:** 1-2 hours",
+      "* **Virtual Cockpit retrofit:** 2-4 hours (includes physical install + coding)",
+      "* **Screen upgrade:** 2-4 hours",
+      "* **Reverse camera install:** 1-2 hours",
+      "* **Diagnostics:** 45-60 minutes",
+      "* **CarPlay/Android Auto activation:** Under 1 hour",
+      "",
+      "*Times may vary based on vehicle complexity and existing hardware.*",
+      "",
+      "We work while you wait in most cases - no need to leave your car overnight.",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(faq|frequently asked|question|questions)\b/i,
+    reply: () => [
+      "Here are answers to common questions:",
+      "",
+      "**Q: What is VAG coding?**",
+      "A: Modifying software settings in your vehicle's ECUs to unlock features or adjust parameters. VAG group cars share platforms and have many features disabled by default.",
+      "",
+      "**Q: Is coding safe and reversible?**",
+      "A: Yes! When done professionally, it's safe and all changes can be reverted. We document everything.",
+      "",
+      "**Q: Will it void my warranty?**",
+      "A: In the UK, no - dealers must prove the coding caused any fault, not just that it was done.",
+      "",
+      "**Q: Do you come to me?**",
+      "A: Yes! We're fully mobile across Leicester and Leicestershire.",
+      "",
+      "**Q: How do I know if my car is compatible?**",
+      "A: Most VAG vehicles from 2012+ support most functions. Email us your reg/VIN and we'll check.",
+      "",
+      "**Q: How long does it take?**",
+      "A: Most jobs are 1-2 hours. Larger retrofits 2-4 hours.",
+      "",
+      "Want more details? Email **" + CONTACT_EMAIL + "**!",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(warranty|guarantee|security|seal)\b/i,
+    reply: () => [
+      "**Warranty information:**",
+      "",
+      "**New Equipment:** 12 months warranty",
+      "",
+      "**Used/Second-hand Equipment:** 28 days warranty with security seal applied",
+      "",
+      "All our work is documented and reversible. We use genuine OEM parts for retrofits wherever possible.",
+      "",
+      "For specific warranty questions about a product or service, contact **" + CONTACT_EMAIL + "**.",
+    ].join("\n"),
+  },
+  {
+    keywords: /\b(payment|pay|checkout|stripe|klarna|apple pay)\b/i,
+    reply: () => [
+      "**Payment Methods Accepted:**",
+      "* Visa",
+      "* Mastercard",
+      "* Apple Pay",
+      "* PayPal",
+      "* Klarna (buy now, pay later)",
+      "",
+      "**Secure checkout** powered by Stripe. All major cards accepted.",
+      "",
+      "Payment is typically taken after service completion. Contact us if you have any payment questions.",
+    ].join("\n"),
   },
 ];
 
-const fallback = `Thanks for your message! For the most accurate answer, please:\n\n✉️ Email **${CONTACT.email}**\n📝 Or use the **Contact page**\n\nWe typically respond within a few hours during business hours.`;
+const fallback = [
+  "Thanks for your message! For the most accurate answer, please:",
+  "",
+  ":email: Email **" + CONTACT_EMAIL + "**",
+  "",
+  ":memo: Or use the **Contact page** on this site",
+  "",
+  "We typically respond within a few hours during business hours.",
+  "",
+  "**Quick tips:**",
+  "* Include your vehicle registration or VIN",
+  "* Tell us what service you're interested in",
+  "* Mention your location (we're mobile across Leicester!)",
+].join("\n");
 
 export async function getChatResponse(message: string, _history: { role: "user" | "model"; parts: string }[]): Promise<string> {
   const matched = rules.find(r => r.keywords.test(message));
-  return Promise.resolve(matched ? matched.reply : fallback);
+  if (matched) {
+    const reply = typeof matched.reply === 'function' ? matched.reply() : matched.reply;
+    return Promise.resolve(reply);
+  }
+  return Promise.resolve(fallback);
 }

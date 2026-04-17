@@ -6,15 +6,23 @@ import { ShoppingBag, Search, Filter, ChevronRight, LayoutGrid, List, CreditCard
 import { useProducts } from '../hooks/useProducts';
 import { cn } from '../lib/utils';
 import { useCart } from '../lib/CartContext';
+import { PaymentIcons } from '../components/PaymentIcons';
 
 const categories = ['All', 'Cameras', 'Retrofits', 'Repairs', 'Parts'] as const;
 
+const PaymentIcon = ({ type }: { type: string }) => (
+  <span 
+    className="w-10 h-6 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:text-current" 
+    dangerouslySetInnerHTML={{ __html: PaymentIcons[type as keyof typeof PaymentIcons] || '' }} 
+  />
+);
+
 const PAYMENT_METHODS = [
-  { name: 'Visa', icon: '💳' },
-  { name: 'Mastercard', icon: '💳' },
-  { name: 'Apple Pay', icon: '🍎' },
-  { name: 'PayPal', icon: '🅿️' },
-  { name: 'Klarna', icon: '💳' },
+  { name: 'Visa', type: 'visa' },
+  { name: 'Mastercard', type: 'mastercard' },
+  { name: 'Apple Pay', type: 'applepay' },
+  { name: 'PayPal', type: 'paypal' },
+  { name: 'Klarna', type: 'klarna' },
 ];
 
 const WARRANTY_INFO = {
@@ -74,7 +82,7 @@ export default function Shop() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-5xl font-bold font-outfit text-vw-blue dark:text-white mb-4"
+              className="text-4xl md:text-5xl font-bold font-outfit text-black dark:text-white mb-4"
             >
               Premium VAG <span className="text-brand">Upgrades</span>
             </motion.h1>
@@ -82,7 +90,7 @@ export default function Shop() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-vw-blue/60 dark:text-white/60 max-w-xl text-lg"
+              className="text-black/60 dark:text-white/60 max-w-xl text-lg"
             >
               Enhance your driving experience with our range of OEM retrofit components and expert repair services.
             </motion.p>
@@ -100,7 +108,7 @@ export default function Shop() {
                 onClick={() => setViewMode('grid')}
                 className={cn(
                   "p-2 rounded-xl transition-all",
-                  viewMode === 'grid' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-vw-blue/40 dark:text-white/40 hover:text-brand"
+                  viewMode === 'grid' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-black/40 dark:text-white/40 hover:text-brand"
                 )}
                 title="Grid View"
               >
@@ -110,7 +118,7 @@ export default function Shop() {
                 onClick={() => setViewMode('list')}
                 className={cn(
                   "p-2 rounded-xl transition-all",
-                  viewMode === 'list' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-vw-blue/40 dark:text-white/40 hover:text-brand"
+                  viewMode === 'list' ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-black/40 dark:text-white/40 hover:text-brand"
                 )}
                 title="List View"
               >
@@ -120,13 +128,13 @@ export default function Shop() {
 
             {/* Search Bar */}
             <div className="relative group flex-1 md:flex-none">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-vw-blue/40 dark:text-white/40 group-focus-within:text-brand transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40 dark:text-white/40 group-focus-within:text-brand transition-colors" />
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full md:w-80 pl-11 pr-4 py-3 rounded-2xl bg-white/50 dark:bg-white/5 border border-vw-blue/10 dark:border-white/10 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all placeholder:text-vw-blue/30 dark:placeholder:text-white/30 backdrop-blur-sm"
+                className="w-full md:w-80 pl-11 pr-4 py-3 rounded-2xl bg-white/50 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all placeholder:text-black/30 dark:placeholder:text-white/30 backdrop-blur-sm"
               />
             </div>
           </motion.div>
@@ -145,7 +153,7 @@ export default function Shop() {
                 "px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap",
                 activeCategory === category
                   ? "bg-brand text-white shadow-lg shadow-brand/20 scale-105"
-                  : "bg-white/50 dark:bg-white/5 text-vw-blue/60 dark:text-white/60 hover:bg-brand/10 hover:text-brand"
+                    : "bg-white/50 dark:bg-white/5 text-black/60 dark:text-white/60 hover:bg-brand/10 hover:text-brand"
               )}
             >
               {category}
@@ -200,11 +208,11 @@ export default function Shop() {
                       "mb-4",
                       viewMode === 'list' ? "md:mb-0 flex-1" : ""
                     )}>
-                      <h3 className="text-xl font-bold font-outfit text-vw-blue dark:text-white mb-2 group-hover:text-brand transition-colors">
+                      <h3 className="text-xl font-bold font-outfit text-black dark:text-white mb-2 group-hover:text-brand transition-colors">
                         {product.name}
                       </h3>
                       <p className={cn(
-                        "text-sm text-vw-blue/60 dark:text-white/60",
+                         "text-sm text-black/60 dark:text-white/60",
                         viewMode === 'grid' ? "line-clamp-2" : "md:line-clamp-3"
                       )}>
                         {product.description}
@@ -217,7 +225,7 @@ export default function Shop() {
                     )}>
                       <div>
                         <span className="text-[10px] uppercase font-bold text-brand block tracking-widest mb-1">Price</span>
-                        <span className="text-2xl font-bold text-vw-blue dark:text-white">{product.price}</span>
+                         <span className="text-2xl font-bold text-black dark:text-white">{product.price}</span>
                         <span className={cn(
                           "text-[10px] block mt-1",
                           product.condition === 'new' ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
@@ -248,10 +256,10 @@ export default function Shop() {
                             </>
                           )}
                         </button>
-                        <div className="flex items-center justify-center gap-1 text-[10px] text-[var(--text)]/40">
-                          <span>Pay with:</span>
+                        <div className="flex items-center justify-center gap-3 text-[var(--text)]/40">
+                          <span className="text-[10px]">Pay with:</span>
                           {PAYMENT_METHODS.slice(0, 3).map(pm => (
-                            <span key={pm.name} title={pm.name}>{pm.icon}</span>
+                            <span key={pm.name} title={pm.name} className="flex items-center"><PaymentIcon type={pm.type} /></span>
                           ))}
                         </div>
                       </div>
@@ -273,8 +281,8 @@ export default function Shop() {
             <div className="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Filter className="w-8 h-8 text-brand" />
             </div>
-            <h3 className="text-2xl font-bold text-vw-blue dark:text-white mb-2">No products found</h3>
-            <p className="text-vw-blue/60 dark:text-white/60">Try adjusting your filters or search terms.</p>
+             <h3 className="text-2xl font-bold text-black dark:text-white mb-2">No products found</h3>
+             <p className="text-black/60 dark:text-white/60">Try adjusting your filters or search terms.</p>
             <button
               onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
               className="mt-6 text-brand font-bold uppercase tracking-widest flex items-center gap-2 mx-auto hover:gap-3 transition-all"
@@ -299,7 +307,7 @@ export default function Shop() {
             <div className="flex flex-wrap gap-3">
               {PAYMENT_METHODS.map(pm => (
                 <span key={pm.name} className="px-4 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm font-medium flex items-center gap-2">
-                  <span>{pm.icon}</span> {pm.name}
+                  <span className="w-10 flex items-center"><PaymentIcon type={pm.type} /></span> {pm.name}
                 </span>
               ))}
             </div>

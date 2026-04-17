@@ -21,11 +21,11 @@ const id = () => ++msgId;
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    {
+      {
       id: id(),
       role: 'bot',
-      text: "👋 Hi! I'm the VAG Leicester AI. Expert in coding, retrofits, and diagnostics. How can I help with your car today?",
-      suggestions: ['Is my car compatible?', 'What services do you offer?', 'How do I book?']
+      text: "👋 Welcome to VAG Leicester! I'm your AI assistant specialising in VAG group coding, retrofits and diagnostics. I can help with CarPlay/Android Auto, Virtual Cockpits, hidden feature activations, reverse cameras, diagnostics and more. How can I help today?",
+      suggestions: ['What services do you offer?', 'Is my car compatible?', 'How much does it cost?', 'How do I book?']
     }
   ]);
   const [input, setInput] = useState('');
@@ -99,7 +99,7 @@ export default function ChatBot() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] flex flex-col rounded-3xl overflow-hidden shadow-2xl border border-vw-blue/10 dark:border-white/10 bg-white dark:bg-vw-blue/95 backdrop-blur-xl"
+            className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] flex flex-col rounded-3xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-vw-blue/95 backdrop-blur-xl"
           >
             {/* Header */}
             <div className="bg-vw-blue dark:bg-black/40 px-6 py-4 flex items-center gap-4 border-b border-white/5">
@@ -123,13 +123,13 @@ export default function ChatBot() {
                     "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border",
                     msg.role === 'bot' ? "bg-brand/10 border-brand/20" : "bg-vw-blue/5 dark:bg-white/5 border-transparent"
                   )}>
-                    {msg.role === 'bot' ? <Bot className="w-4 h-4 text-brand" /> : <User className="w-4 h-4 text-vw-blue/40 dark:text-white/40" />}
+                    {msg.role === 'bot' ? <Bot className="w-4 h-4 text-brand" /> : <User className="w-4 h-4 text-black/40 dark:text-white/40" />}
                   </div>
                   <div className={cn("flex flex-col gap-2 max-w-[85%]", msg.role === 'user' ? "items-end" : "items-start")}>
                     <div className={cn(
                       "px-4 py-3 rounded-2xl text-[13px] leading-relaxed shadow-sm",
                       msg.role === 'bot' 
-                        ? "bg-vw-blue/5 dark:bg-white/5 text-vw-blue dark:text-white rounded-tl-sm border border-vw-blue/5 dark:border-white/5" 
+                        ? "bg-black/5 dark:bg-white/5 text-black dark:text-white rounded-tl-sm border border-black/5 dark:border-white/5" 
                         : "bg-brand text-white rounded-tr-sm"
                     )}>
                       {renderText(msg.text)}
@@ -137,7 +137,7 @@ export default function ChatBot() {
                     {msg.suggestions && (
                       <div className="flex flex-wrap gap-2 mt-1">
                         {msg.suggestions.map(s => (
-                          <button key={s} onClick={() => sendMessage(s)} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-vw-blue/10 dark:border-white/10 hover:border-brand hover:text-brand transition-all text-vw-blue/40 dark:text-white/40 bg-white dark:bg-transparent">
+                          <button key={s} onClick={() => sendMessage(s)}                           className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 hover:border-brand hover:text-brand transition-all text-black/40 dark:text-white/40 bg-white dark:bg-transparent">
                             {s}
                           </button>
                         ))}
@@ -151,7 +151,7 @@ export default function ChatBot() {
                   <div className="w-8 h-8 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center">
                     <Loader2 className="w-4 h-4 text-brand animate-spin" />
                   </div>
-                  <div className="bg-vw-blue/5 dark:bg-white/5 px-4 py-3 rounded-2xl rounded-tl-sm border border-vw-blue/5 dark:border-white/5">
+                  <div className="bg-black/5 dark:bg-white/5 px-4 py-3 rounded-2xl rounded-tl-sm border border-black/5 dark:border-white/5">
                     <span className="text-[11px] font-bold text-brand uppercase tracking-widest animate-pulse">Assistant is thinking...</span>
                   </div>
                 </div>
@@ -160,13 +160,13 @@ export default function ChatBot() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSubmit} className="p-4 bg-vw-blue/5 dark:bg-black/20 border-t border-vw-blue/10 dark:border-white/10 flex gap-3">
+            <form onSubmit={handleSubmit} className="p-4 bg-black/5 dark:bg-black/20 border-t border-black/10 dark:border-white/10 flex gap-3">
               <input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about your car or a service..."
-                className="flex-1 bg-white dark:bg-white/5 border border-vw-blue/10 dark:border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-brand transition-all dark:text-white placeholder:text-vw-blue/20 dark:placeholder:text-white/20 shadow-inner"
+                className="flex-1 bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-brand transition-all dark:text-white placeholder:text-black/20 dark:placeholder:text-white/20 shadow-inner"
               />
               <button disabled={!input.trim() || typing} className="w-12 h-12 rounded-2xl bg-brand hover:bg-brand-accent text-white flex items-center justify-center transition-all shadow-lg shadow-brand/20 disabled:opacity-50 active:scale-95">
                 <Send className="w-5 h-5" />

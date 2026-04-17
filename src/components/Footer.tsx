@@ -4,13 +4,13 @@ import Logo from './Logo';
 
 export default function Footer() {
   return (
-    <footer className="bg-dark-accent border-t border-white/5 pt-16 pb-8 px-6">
+    <footer className="bg-black border-t border-white/5 pt-16 pb-8 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
 
         {/* Brand */}
         <div className="space-y-6">
           <Link to="/" className="flex items-center group">
-            <Logo className="h-10" />
+            <Logo className="h-16" />
           </Link>
           <p className="text-white/50 text-sm leading-relaxed">
             Leicester's premier specialists for Audi, VW, SEAT and Skoda software coding, retrofitting and diagnostics. Fully mobile across Leicestershire.
@@ -19,7 +19,7 @@ export default function Footer() {
             <a href="https://www.facebook.com/vagcodingleicester" rel="noopener noreferrer" target="_blank" className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-brand transition-colors" aria-label="Facebook">
               <Facebook className="w-5 h-5" />
             </a>
-            <a href="https://www.instagram.com/vagcodingleicester" rel="noopener noreferrer" target="_blank" className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-brand transition-colors" aria-label="Instagram">
+            <a href="https://www.instagram.com/vag-leicester" rel="noopener noreferrer" target="_blank" className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-brand transition-colors" aria-label="Instagram">
               <Instagram className="w-5 h-5" />
             </a>
             <a href="https://twitter.com/vagcodingleicester" rel="noopener noreferrer" target="_blank" className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-brand transition-colors" aria-label="Twitter">
