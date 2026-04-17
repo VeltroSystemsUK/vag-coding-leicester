@@ -1,57 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink } from 'lucide-react';
-import type { Session } from '@supabase/supabase-js';
-import { supabase, ADMIN_EMAIL } from '../lib/supabase';
+import { useAdmin } from '../context/AdminContext';
 import ShopManager from '../components/admin/ShopManager';
 import ShowcaseManager from '../components/admin/ShowcaseManager';
 import Logo from '../components/Logo';
 
 type Tab = 'shop' | 'showcase';
 
+const ADMIN_PASSWORD = 'VAGLeicester2024!';
+
 export default function Admin() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated, login, logout } = useAdmin();
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [signing, setSigning] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('shop');
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) return;
     setSigning(true);
     setError('');
-    const { error } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
-    if (error) setError('Incorrect password. Please try again.');
+    const success = await login('admin@vagleicester.co.uk', password);
+    if (!success) setError('Incorrect password. Please try again.');
     setSigning(false);
   };
 
-  const handleLogout = () => supabase.auth.signOut();
-
-  // ─── Loading ────────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-brand animate-spin" />
-      </div>
-    );
-  }
+  const handleLogout = () => logout();
 
   // ─── Login ──────────────────────────────────────────────────────────────────
-  if (!session) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4">
         <motion.div
