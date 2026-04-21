@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import CountUp from '../components/CountUp';
 import InstagramFeed from '../components/InstagramFeed';
 import { useAdmin } from '../context/AdminContext';
+import PopupBanner from '../components/admin/PopupBanner';
 import oemAftermarketImg from '../assets/OEM-01.jpg';
 // Hero carousel images
 import heroImg0 from '../assets/Exterior -01.jpg';  // VW R at sunset — cinematic
@@ -58,6 +59,7 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
+      <PopupBanner />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] md:h-screen flex items-center px-6 pt-48 sm:pt-40 md:pt-32 overflow-hidden">
         <div className="absolute inset-0 z-0 overflow-hidden">

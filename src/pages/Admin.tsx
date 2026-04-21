@@ -1,28 +1,34 @@
 import { useState, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink, Wrench, Sparkles, Users, Settings, Building2 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import ShopManager from '../components/admin/ShopManager';
 import ShowcaseManager from '../components/admin/ShowcaseManager';
+import ServicesManager from '../components/admin/ServicesManager';
+import PopupBannerManager from '../components/admin/PopupBannerManager';
+import UsersManager from '../components/admin/UsersManager';
+import InstallationSettingsManager from '../components/admin/InstallationSettingsManager';
+import BusinessManager from '../components/admin/BusinessManager';
 import Logo from '../components/Logo';
 
-type Tab = 'shop' | 'showcase';
+type Tab = 'business' | 'shop' | 'showcase' | 'services' | 'popup' | 'users' | 'install';
 
 export default function Admin() {
   const { isAuthenticated, login, logout } = useAdmin();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [signing, setSigning] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>('shop');
+  const [activeTab, setActiveTab] = useState<Tab>('business');
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    if (!password) return;
+    if (!email || !password) return;
     setSigning(true);
     setError('');
-    const success = await login('admin@vagleicester.co.uk', password);
-    if (!success) setError('Incorrect password. Please try again.');
+    const success = await login(email, password);
+    if (!success) setError('Invalid email or password. Please try again.');
     setSigning(false);
   };
 
@@ -39,22 +45,29 @@ export default function Admin() {
         >
           <div className="mb-8 flex justify-center">
             <div className="bg-black rounded-xl overflow-hidden p-1">
-              <Logo className="h-14" />
+              <Logo className="h-16" />
             </div>
           </div>
 
           <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8">
             <h1 className="text-xl font-bold text-white mb-1">Admin Access</h1>
-            <p className="text-white/40 text-sm mb-8">Enter your admin password to continue.</p>
+            <p className="text-white/40 text-sm mb-8">Enter your credentials to continue.</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                placeholder="Email address"
+                autoFocus
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/25 outline-none focus:border-brand transition-colors text-sm"
+              />
               <div className="relative">
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Password"
-                  autoFocus
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/25 outline-none focus:border-brand transition-colors pr-11 text-sm"
                 />
                 <button
@@ -78,7 +91,7 @@ export default function Admin() {
 
               <button
                 type="submit"
-                disabled={signing || !password}
+                disabled={signing || !email || !password}
                 className="w-full bg-[#E30B18] hover:bg-[#c00915] disabled:opacity-40 text-white font-bold text-sm uppercase tracking-widest py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {signing && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -91,12 +104,22 @@ export default function Admin() {
     );
   }
 
+  const tabs: { id: Tab; label: string; Icon: typeof ShoppingBag }[] = [
+    { id: 'business', label: 'Business', Icon: Building2 },
+    { id: 'shop', label: 'Shop', Icon: ShoppingBag },
+    { id: 'showcase', label: 'Showcase', Icon: Camera },
+    { id: 'services', label: 'Services', Icon: Wrench },
+    { id: 'install', label: 'Install', Icon: Settings },
+    { id: 'popup', label: 'Popup', Icon: Sparkles },
+    { id: 'users', label: 'Users', Icon: Users },
+  ];
+
   return (
     <div className="min-h-screen bg-[#050505] text-white">
       <div className="border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-black rounded-xl overflow-hidden p-0.5">
-            <Logo className="h-9" />
+            <Logo className="h-12" />
           </div>
           <div className="border-l border-white/10 pl-4">
             <p className="text-white font-bold text-sm leading-none mb-0.5">Admin Panel</p>
@@ -121,15 +144,12 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="border-b border-white/[0.06] px-6 flex gap-1">
-        {([
-          { id: 'shop' as Tab, label: 'Shop', Icon: ShoppingBag },
-          { id: 'showcase' as Tab, label: 'Showcase', Icon: Camera },
-        ]).map(({ id, label, Icon }) => (
+      <div className="border-b border-white/[0.06] px-6 flex gap-1 overflow-x-auto">
+        {tabs.map(({ id, label, Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 py-4 px-2 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors ${
+            className={`flex items-center gap-2 py-4 px-3 text-sm font-bold uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap ${
               activeTab === id
                 ? 'border-[#E30B18] text-[#E30B18]'
                 : 'border-transparent text-white/30 hover:text-white/60'
@@ -142,7 +162,13 @@ export default function Admin() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {activeTab === 'shop' ? <ShopManager /> : <ShowcaseManager />}
+        {activeTab === 'business' && <BusinessManager />}
+        {activeTab === 'shop' && <ShopManager />}
+        {activeTab === 'showcase' && <ShowcaseManager />}
+        {activeTab === 'services' && <ServicesManager />}
+        {activeTab === 'install' && <InstallationSettingsManager />}
+        {activeTab === 'popup' && <PopupBannerManager />}
+        {activeTab === 'users' && <UsersManager />}
       </div>
     </div>
   );

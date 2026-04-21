@@ -10,7 +10,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="space-y-6">
           <Link to="/" className="flex items-center group">
-            <Logo className="h-16" />
+            <Logo className="h-20" variant="footer" theme="dark" />
           </Link>
           <p className="text-white/50 text-sm leading-relaxed">
             Leicester's premier specialists for Audi, VW, SEAT and Skoda software coding, retrofitting and diagnostics. Fully mobile across Leicestershire.

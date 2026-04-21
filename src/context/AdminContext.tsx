@@ -1,9 +1,46 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
+
+interface BusinessSettings {
+  businessName: string;
+  logoUrl: string;
+  darkMode: {
+    primaryColor: string;
+    accentColor: string;
+    backgroundColor: string;
+    textColor: string;
+  };
+  lightMode: {
+    primaryColor: string;
+    accentColor: string;
+    backgroundColor: string;
+    textColor: string;
+  };
+  address: string;
+  telephone: string;
+  telephoneEnabled: boolean;
+  email: string;
+}
 
 interface AdminSettings {
   promoBanners: {
     carPlay: { active: boolean; title: string; subtitle: string };
     japaneseEu: { active: boolean; title: string; subtitle: string };
+  };
+  popupBanner: {
+    active: boolean;
+    title: string;
+    subtitle: string;
+    ctaText: string;
+    ctaLink: string;
+    backgroundImage: string;
+    expiryDate: string;
+  };
+  installationSettings: {
+    mobileWithin100: string;
+    mobileOver100: string;
+    garage: string;
+    installationRequired: boolean;
   };
   services: Array<{
     id: string;
@@ -12,23 +49,76 @@ interface AdminSettings {
     featured: boolean;
     icon: string;
   }>;
+  business: BusinessSettings;
+}
+
+interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
 }
 
 interface AdminContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  user: AdminUser | null;
   settings: AdminSettings;
   updateSettings: (settings: Partial<AdminSettings>) => void;
   updatePromoBanner: (key: 'carPlay' | 'japaneseEu', data: Partial<AdminSettings['promoBanners']['carPlay']>) => void;
   togglePromoBanner: (key: 'carPlay' | 'japaneseEu') => void;
   updateService: (id: string, data: Partial<AdminSettings['services'][0]>) => void;
+  addService: (service: Omit<AdminSettings['services'][0], 'id'>) => void;
+  deleteService: (id: string) => void;
+  updatePopupBanner: (data: Partial<AdminSettings['popupBanner']>) => void;
+  updateInstallationSettings: (data: Partial<AdminSettings['installationSettings']>) => void;
+  updateBusinessSettings: (data: Partial<BusinessSettings>) => void;
+  // User management
+  fetchUsers: () => Promise<AdminUser[]>;
+  addUser: (email: string, password: string, name: string) => Promise<boolean>;
+  deleteUser: (id: string) => Promise<boolean>;
+  changePassword: (id: string, newPassword: string) => Promise<boolean>;
 }
 
 const defaultSettings: AdminSettings = {
+  business: {
+    businessName: 'VAG Coding Leicester',
+    logoUrl: '',
+    darkMode: {
+      primaryColor: '#E30B18',
+      accentColor: '#E30B18',
+      backgroundColor: '#050505',
+      textColor: '#FFFFFF',
+    },
+    lightMode: {
+      primaryColor: '#E30B18',
+      accentColor: '#c00915',
+      backgroundColor: '#FFFFFF',
+      textColor: '#111111',
+    },
+    address: '',
+    telephone: '',
+    telephoneEnabled: true,
+    email: '',
+  },
   promoBanners: {
     carPlay: { active: true, title: 'Apple CarPlay & Android Auto', subtitle: 'Most Popular Service' },
     japaneseEu: { active: true, title: 'Japanese to EU Radio Conversions', subtitle: 'Specialist Service' },
+  },
+  popupBanner: {
+    active: false,
+    title: 'Special Offer!',
+    subtitle: 'Get 20% off CarPlay activation this month',
+    ctaText: 'Book Now',
+    ctaLink: '/contact',
+    backgroundImage: '',
+    expiryDate: '',
+  },
+  installationSettings: {
+    mobileWithin100: '50.00',
+    mobileOver100: '100.00',
+    garage: '25.00',
+    installationRequired: true,
   },
   services: [
     { id: '1', title: 'Apple CarPlay / Android Auto', description: 'Full activation of Apple CarPlay and Android Auto for MIB2 and MIB3 head units. Wireless options available.', featured: true, icon: 'Radio' },
@@ -49,11 +139,6 @@ const defaultSettings: AdminSettings = {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-const ADMIN_CREDENTIALS = {
-  email: 'admin@vagleicester.co.uk',
-  password: 'VAGLeicester2024!',
-};
-
 const STORAGE_KEY = 'vag_admin_settings';
 
 export function AdminProvider({ children }: { children: ReactNode }) {
@@ -63,7 +148,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          return { ...defaultSettings, ...parsed, popupBanner: { ...defaultSettings.popupBanner, ...parsed.popupBanner } };
         } catch {
           return defaultSettings;
         }
@@ -78,17 +164,42 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [settings]);
 
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
+
   const login = async (email: string, password: string): Promise<boolean> => {
-    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('vag_admin_auth', 'true');
-      return true;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      if (data.user) {
+        setIsAuthenticated(true);
+        setCurrentUser({ id: data.user.id, email: data.user.email!, name: '' });
+        sessionStorage.setItem('vag_admin_auth', 'true');
+        return true;
+      }
+      return false;
+    } catch {
+      // Fallback to legacy credential check if Supabase unavailable
+      if (email === 'admin@vagleicester.co.uk' && password === 'VAGLeicester2024!') {
+        setIsAuthenticated(true);
+        setCurrentUser({ id: 'legacy-admin', email: 'admin@vagleicester.co.uk', name: 'Admin' });
+        sessionStorage.setItem('vag_admin_auth', 'true');
+        return true;
+      }
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore errors during logout
+    }
     setIsAuthenticated(false);
+    setCurrentUser(null);
     sessionStorage.removeItem('vag_admin_auth');
   };
 
@@ -123,6 +234,112 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const addService = (service: Omit<AdminSettings['services'][0], 'id'>) => {
+    const newId = String(Date.now());
+    setSettings(prev => ({
+      ...prev,
+      services: [...prev.services, { ...service, id: newId }],
+    }));
+  };
+
+  const deleteService = (id: string) => {
+    setSettings(prev => ({
+      ...prev,
+      services: prev.services.filter(s => s.id !== id),
+    }));
+  };
+
+  const updatePopupBanner = (data: Partial<AdminSettings['popupBanner']>) => {
+    setSettings(prev => ({
+      ...prev,
+      popupBanner: { ...prev.popupBanner, ...data },
+    }));
+  };
+
+  const updateInstallationSettings = (data: Partial<AdminSettings['installationSettings']>) => {
+    setSettings(prev => ({
+      ...prev,
+      installationSettings: { ...prev.installationSettings, ...data },
+    }));
+  };
+
+  const updateBusinessSettings = (data: Partial<BusinessSettings>) => {
+    setSettings(prev => ({
+      ...prev,
+      business: { ...prev.business, ...data },
+    }));
+  };
+
+  const fetchUsers = async (): Promise<AdminUser[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id, email, name')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const addUser = async (email: string, password: string, name: string): Promise<boolean> => {
+    try {
+      // Create user in Supabase Auth
+      const { data, error } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      if (error) throw error;
+      
+      if (data.user) {
+        // Add to admin_users table
+        const { error: insertError } = await supabase
+          .from('admin_users')
+          .insert({ id: data.user.id, email, name });
+        if (insertError) throw insertError;
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error adding user:', err);
+      return false;
+    }
+  };
+
+  const deleteUser = async (id: string): Promise<boolean> => {
+    try {
+      // Delete from auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(id);
+      if (authError) throw authError;
+      
+      // Delete from admin_users table
+      const { error: tableError } = await supabase
+        .from('admin_users')
+        .delete()
+        .eq('id', id);
+      if (tableError) throw tableError;
+      
+      return true;
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      return false;
+    }
+  };
+
+  const changePassword = async (id: string, newPassword: string): Promise<boolean> => {
+    try {
+      // Use the admin API properly
+      const { error } = await supabase.auth.admin.updateUserById(id, { password: newPassword });
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      console.error('Error changing password:', err);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const auth = sessionStorage.getItem('vag_admin_auth');
     if (auth === 'true') {
@@ -135,11 +352,21 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       login,
       logout,
+      user: currentUser,
       settings,
       updateSettings,
       updatePromoBanner,
       togglePromoBanner,
       updateService,
+      addService,
+      deleteService,
+      updatePopupBanner,
+      updateInstallationSettings,
+      updateBusinessSettings,
+      fetchUsers,
+      addUser,
+      deleteUser,
+      changePassword,
     }}>
       {children}
     </AdminContext.Provider>
