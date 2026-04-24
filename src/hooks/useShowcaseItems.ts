@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { galleryItems, GalleryItem, CategoryId } from '../data/showcaseItems';
@@ -15,15 +15,36 @@ export function useShowcaseItems(): GalleryItem[] {
   const [additions, setAdditions] = useState<ShowcaseAddition[]>([]);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    Promise.all([
+  const fetchData = useCallback(async () => {
+    const [{ data: adds }, { data: hidden }] = await Promise.all([
       supabase.from('showcase_additions').select('*').order('created_at', { ascending: false }),
       supabase.from('hidden_items').select('item_id').eq('content_type', 'showcase'),
-    ]).then(([{ data: adds }, { data: hidden }]) => {
-      setAdditions((adds ?? []) as ShowcaseAddition[]);
-      setHiddenIds((hidden ?? []).map((h: { item_id: string }) => h.item_id));
-    });
+    ]);
+    setAdditions((adds ?? []) as ShowcaseAddition[]);
+    setHiddenIds((hidden ?? []).map((h: { item_id: string }) => h.item_id));
   }, []);
+
+  useEffect(() => {
+    fetchData();
+
+    const channel = supabase
+      .channel('showcase_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'showcase_additions' },
+        fetchData
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'hidden_items' },
+        fetchData
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   return [
     ...galleryItems.filter(i => !hiddenIds.includes(String(i.id))),
