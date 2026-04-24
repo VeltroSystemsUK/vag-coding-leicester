@@ -330,7 +330,6 @@ export default function ShowcaseManager() {
             isCustom={false}
             categories={CATEGORIES}
             viewMode={viewMode}
-            categories={CATEGORIES}
           />
         ))}
       </div>
