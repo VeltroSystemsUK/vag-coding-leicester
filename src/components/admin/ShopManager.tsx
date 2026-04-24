@@ -88,10 +88,18 @@ export default function ShopManager() {
       if (form.imageFile) {
         const ext = form.imageFile.name.split('.').pop();
         const fileName = `products/${Date.now()}.${ext}`;
+        
         const { error: uploadError } = await supabase.storage
           .from(STORAGE_BUCKET)
-          .upload(fileName, form.imageFile);
-        if (uploadError) throw uploadError;
+          .upload(fileName, form.imageFile, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: form.imageFile.type || 'image/jpeg'
+          });
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw new Error(uploadError.message);
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from(STORAGE_BUCKET)
@@ -116,8 +124,9 @@ export default function ShopManager() {
 
       resetForm();
       fetchData();
-    } catch (err) {
-      setFormError('Upload failed. Please try again.');
+    } catch (err: any) {
+      console.error('Save error:', err);
+      setFormError(err?.message || 'Upload failed. Please try again.');
     } finally {
       setSaving(false);
     }
