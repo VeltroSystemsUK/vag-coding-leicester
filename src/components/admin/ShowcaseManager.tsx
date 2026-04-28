@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Upload, X, Loader2, Edit2, Filter, LayoutGrid, List } from 'lucide-react';
+import { Plus, Trash2, Upload, X, Loader2, Edit2, Filter, LayoutGrid, List, FolderOpen } from 'lucide-react';
 import { supabase, STORAGE_BUCKET } from '../../lib/supabase';
 import { galleryItems, CategoryId } from '../../data/showcaseItems';
+import MediaGallery from './MediaGallery';
 
 type ShowcaseCategory = Exclude<CategoryId, 'all'>;
 
@@ -37,6 +38,7 @@ export default function ShowcaseManager() {
   const [formError, setFormError] = useState('');
   const [activeCategory, setActiveCategory] = useState<ShowcaseCategory | 'all'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -77,6 +79,11 @@ export default function ShowcaseManager() {
     setFormError('');
   };
 
+  const handleGallerySelect = (url: string) => {
+    setForm(prev => ({ ...prev, imageFile: null, preview: url }));
+    setShowMediaGallery(false);
+  };
+
   const resetForm = () => {
     setShowForm(false);
     setForm({ title: '', category: 'exterior', description: '', imageFile: null, preview: null });
@@ -84,30 +91,40 @@ export default function ShowcaseManager() {
   };
 
   const handleAdd = async () => {
-    if (!form.title.trim() || !form.imageFile) {
-      setFormError('Title and image are required.');
+    if (!form.title.trim()) {
+      setFormError('Title is required.');
+      return;
+    }
+    if (!form.imageFile && !form.preview) {
+      setFormError('Image is required.');
       return;
     }
     setSaving(true);
     setFormError('');
     try {
-      const ext = form.imageFile.name.split('.').pop();
-      const fileName = `showcase/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(fileName, form.imageFile, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: form.imageFile.type || 'image/jpeg'
-        });
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(uploadError.message);
-      }
+      let publicUrl: string;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(fileName);
+      if (form.imageFile) {
+        const ext = form.imageFile.name.split('.').pop();
+        const fileName = `showcase/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(fileName, form.imageFile, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: form.imageFile.type || 'image/jpeg'
+          });
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw new Error(uploadError.message);
+        }
+        const { data: { publicUrl: url } } = supabase.storage
+          .from(STORAGE_BUCKET)
+          .getPublicUrl(fileName);
+        publicUrl = url;
+      } else {
+        publicUrl = form.preview as string;
+      }
 
       const { error: insertError } = await supabase
         .from('showcase_additions')
@@ -264,6 +281,15 @@ export default function ShowcaseManager() {
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
           </div>
 
+          <button
+            type="button"
+            onClick={() => setShowMediaGallery(true)}
+            className="w-full flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-lg py-2.5 text-white/40 hover:text-white hover:border-brand/50 transition-colors text-xs font-medium"
+          >
+            <FolderOpen className="w-4 h-4" />
+            Choose from Media Gallery
+          </button>
+
           <input
             value={form.title}
             onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
@@ -306,6 +332,14 @@ export default function ShowcaseManager() {
             </button>
           </div>
         </div>
+      )}
+
+      {showMediaGallery && (
+        <MediaGallery
+          onSelect={handleGallerySelect}
+          onClose={() => setShowMediaGallery(false)}
+          isModal={true}
+        />
       )}
 
       <div className={viewMode === 'card' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-3'}>
