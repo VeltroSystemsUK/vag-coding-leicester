@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Upload, ImageIcon, Loader2, Check, Trash2, FolderOpen, Grid3X3, List as ListIcon, Search } from 'lucide-react';
+import { X, Upload, ImageIcon, Loader2, Check, Trash2, FolderOpen, Grid3X3, List as ListIcon, Search, Pencil, Check as CheckIcon, X as XIcon } from 'lucide-react';
 import { supabase, STORAGE_BUCKET } from '../../lib/supabase';
 
 export interface MediaItem {
@@ -176,6 +176,9 @@ export default function MediaGallery({
     e.target.value = '';
   };
 
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
   const handleDelete = async (item: MediaItem) => {
     if (!confirm(`Delete "${item.name}"? This cannot be undone.`)) return;
     setDeleting(item.path);
@@ -190,6 +193,55 @@ export default function MediaGallery({
       setError(err.message || 'Delete failed');
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const startRename = (item: MediaItem) => {
+    setRenaming(item.path);
+    setRenameValue(item.name);
+  };
+
+  const confirmRename = async (item: MediaItem) => {
+    const newName = renameValue.trim();
+    if (!newName || newName === item.name) {
+      setRenaming(null);
+      return;
+    }
+
+    const ext = item.name.includes('.') ? item.name.substring(item.name.lastIndexOf('.')) : '';
+    const newExt = newName.includes('.') ? '' : ext;
+    const fullNewName = newName + newExt;
+    const newPath = item.path.includes('/')
+      ? item.path.substring(0, item.path.lastIndexOf('/') + 1) + fullNewName
+      : fullNewName;
+
+    if (newPath === item.path) {
+      setRenaming(null);
+      return;
+    }
+
+    try {
+      const { error: moveError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .move(item.path, newPath);
+
+      if (moveError) throw moveError;
+
+      const { data: urlData } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(newPath);
+
+      setImages(prev => prev.map(i =>
+        i.path === item.path
+          ? { ...i, name: fullNewName, path: newPath, url: urlData.publicUrl }
+          : i
+      ));
+
+      if (selected === item.url) setSelected(urlData.publicUrl);
+    } catch (err: any) {
+      setError(err.message || 'Rename failed');
+    } finally {
+      setRenaming(null);
     }
   };
 
@@ -336,7 +388,22 @@ export default function MediaGallery({
                     </div>
                   </div>
                 )}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  {renaming === item.path ? (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); confirmRename(item); }}
+                      className="p-1.5 bg-brand/80 hover:bg-brand rounded-lg text-white transition-colors"
+                    >
+                      <CheckIcon className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startRename(item); }}
+                      className="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg text-white transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(item); }}
                     disabled={deleting === item.path}
@@ -350,7 +417,21 @@ export default function MediaGallery({
                   </button>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white/80 text-[10px] truncate">{item.name}</p>
+                  {renaming === item.path ? (
+                    <input
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') confirmRename(item);
+                        if (e.key === 'Escape') setRenaming(null);
+                      }}
+                      className="w-full bg-white/20 text-white text-[10px] px-2 py-1 rounded outline-none focus:bg-white/30"
+                      autoFocus
+                    />
+                  ) : (
+                    <p className="text-white/80 text-[10px] truncate">{item.name}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -372,13 +453,40 @@ export default function MediaGallery({
                 <img src={item.url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm truncate">{item.name}</p>
+                {renaming === item.path ? (
+                  <input
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') confirmRename(item);
+                      if (e.key === 'Escape') setRenaming(null);
+                    }}
+                    className="bg-white/20 text-white text-sm px-2 py-1 rounded outline-none focus:bg-white/30 w-full"
+                    autoFocus
+                  />
+                ) : (
+                  <p className="text-white text-sm truncate">{item.name}</p>
+                )}
                 <p className="text-white/30 text-xs">
                   {formatSize(item.size)} • {new Date(item.createdAt).toLocaleDateString()}
                 </p>
               </div>
-              {selected === item.url && (
-                <Check className="w-5 h-5 text-brand shrink-0" />
+
+              {renaming === item.path ? (
+                <button
+                  onClick={(e) => { e.stopPropagation(); confirmRename(item); }}
+                  className="p-2 rounded-lg bg-brand/20 text-brand hover:bg-brand/40 transition-colors shrink-0"
+                >
+                  <CheckIcon className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); startRename(item); }}
+                  className="p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/20 text-white/30 hover:text-white transition-all shrink-0"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
               )}
               <button
                 onClick={(e) => { e.stopPropagation(); handleDelete(item); }}
