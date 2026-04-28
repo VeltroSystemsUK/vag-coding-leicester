@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Upload, X, Loader2, Edit2, Check, ImageIcon, LayoutGrid, List } from 'lucide-react';
+import { Plus, Trash2, Upload, X, Loader2, Edit2, Check, ImageIcon, LayoutGrid, List, FolderOpen } from 'lucide-react';
 import { supabase, STORAGE_BUCKET } from '../../lib/supabase';
 import { PRODUCTS, Product } from '../../data/products';
 import ImageEditor from './ImageEditor';
+import MediaGallery from './MediaGallery';
 
 const CATEGORIES: Product['category'][] = ['Cameras', 'Retrofits', 'Repairs', 'Parts'];
 
@@ -29,6 +30,7 @@ export default function ShopManager() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [editingImage, setEditingImage] = useState<{ product: any; imageUrl: string; isCustom: boolean } | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -60,6 +62,11 @@ export default function ShopManager() {
     if (!file) return;
     setForm(prev => ({ ...prev, imageFile: file, preview: URL.createObjectURL(file) }));
     setFormError('');
+  };
+
+  const handleGallerySelect = (url: string) => {
+    setForm(prev => ({ ...prev, imageFile: null, preview: url }));
+    setShowMediaGallery(false);
   };
 
   const resetForm = () => {
@@ -267,6 +274,15 @@ const handleDeleteBuiltin = async (id: string) => {
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
           </div>
 
+          <button
+            type="button"
+            onClick={() => setShowMediaGallery(true)}
+            className="w-full flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-lg py-2.5 text-white/40 hover:text-white hover:border-brand/50 transition-colors text-xs font-medium"
+          >
+            <FolderOpen className="w-4 h-4" />
+            Choose from Media Gallery
+          </button>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
               value={form.name}
@@ -378,6 +394,14 @@ const handleDeleteBuiltin = async (id: string) => {
           image={editingImage.imageUrl}
           onSave={handleSaveEditedImage}
           onCancel={() => setEditingImage(null)}
+        />
+      )}
+
+      {showMediaGallery && (
+        <MediaGallery
+          onSelect={handleGallerySelect}
+          onClose={() => setShowMediaGallery(false)}
+          isModal={true}
         />
       )}
     </div>

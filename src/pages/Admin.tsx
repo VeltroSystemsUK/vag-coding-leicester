@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink, Wrench, Sparkles, Users, Settings, Building2 } from 'lucide-react';
+import { LogOut, ShoppingBag, Camera, Loader2, Eye, EyeOff, ExternalLink, Wrench, Sparkles, Users, Settings, Building2, FolderOpen } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import ShopManager from '../components/admin/ShopManager';
 import ShowcaseManager from '../components/admin/ShowcaseManager';
@@ -9,9 +9,10 @@ import PopupBannerManager from '../components/admin/PopupBannerManager';
 import UsersManager from '../components/admin/UsersManager';
 import InstallationSettingsManager from '../components/admin/InstallationSettingsManager';
 import BusinessManager from '../components/admin/BusinessManager';
+import MediaGallery from '../components/admin/MediaGallery';
 import Logo from '../components/Logo';
 
-type Tab = 'business' | 'shop' | 'showcase' | 'services' | 'popup' | 'users' | 'install';
+type Tab = 'business' | 'shop' | 'showcase' | 'services' | 'popup' | 'users' | 'install' | 'media';
 
 export default function Admin() {
   const { isAuthenticated, login, logout } = useAdmin();
@@ -110,6 +111,7 @@ export default function Admin() {
     { id: 'showcase', label: 'Showcase', Icon: Camera },
     { id: 'services', label: 'Services', Icon: Wrench },
     { id: 'install', label: 'Install', Icon: Settings },
+    { id: 'media', label: 'Media', Icon: FolderOpen },
     { id: 'popup', label: 'Popup', Icon: Sparkles },
     { id: 'users', label: 'Users', Icon: Users },
   ];
@@ -167,6 +169,7 @@ export default function Admin() {
         {activeTab === 'showcase' && <ShowcaseManager />}
         {activeTab === 'services' && <ServicesManager />}
         {activeTab === 'install' && <InstallationSettingsManager />}
+        {activeTab === 'media' && <MediaGallery isModal={false} />}
         {activeTab === 'popup' && <PopupBannerManager />}
         {activeTab === 'users' && <UsersManager />}
       </div>
