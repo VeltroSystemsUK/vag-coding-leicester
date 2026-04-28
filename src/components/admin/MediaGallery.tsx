@@ -221,15 +221,21 @@ export default function MediaGallery({
     }
 
     try {
-      const { error: moveError } = await supabase.storage
+      const { data: copyData, error: copyError } = await supabase.storage
         .from(STORAGE_BUCKET)
-        .move(item.path, newPath);
+        .copy(item.path, newPath);
 
-      if (moveError) throw moveError;
+      if (copyError) throw copyError;
 
       const { data: urlData } = supabase.storage
         .from(STORAGE_BUCKET)
         .getPublicUrl(newPath);
+
+      const { error: delError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .remove([item.path]);
+
+      if (delError) console.error('Old file delete failed:', delError);
 
       setImages(prev => prev.map(i =>
         i.path === item.path
