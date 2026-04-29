@@ -33,8 +33,9 @@ export default function ImageEditor({ image, onSave, onCancel }: ImageEditorProp
     if (!croppedAreaPixels || !image) return null;
     
     const imageElem = document.createElement('img');
+    imageElem.crossOrigin = 'anonymous';
     imageElem.src = image;
-    
+
     await new Promise((resolve) => {
       imageElem.onload = resolve;
     });
@@ -101,6 +102,7 @@ export default function ImageEditor({ image, onSave, onCancel }: ImageEditorProp
   const addTextToImage = async (imgSrc: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = () => {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
