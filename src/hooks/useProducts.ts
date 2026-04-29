@@ -16,6 +16,8 @@ interface ProductAddition {
   category: Product['category'];
   description: string;
   image_url: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
 }
 
 export function useProducts(): MergedProduct[] {
@@ -64,6 +66,8 @@ export function useProducts(): MergedProduct[] {
       category: a.category,
       description: a.description,
       image: a.image_url,
+      vehicle_make: a.vehicle_make,
+      vehicle_model: a.vehicle_model,
       _source: 'custom' as const,
       _supabaseId: a.id,
     })),

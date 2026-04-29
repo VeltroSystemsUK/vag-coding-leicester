@@ -4,6 +4,7 @@ import { supabase, STORAGE_BUCKET } from '../../lib/supabase';
 import { PRODUCTS, Product } from '../../data/products';
 import ImageEditor from './ImageEditor';
 import MediaGallery from './MediaGallery';
+import { VAG_MAKES } from '../../data/vehicles';
 
 const CATEGORIES: Product['category'][] = ['Cameras', 'Retrofits', 'Repairs', 'Parts'];
 
@@ -18,6 +19,8 @@ interface ProductAddition {
   mobile_within_100: string;
   mobile_over_100: string;
   garage: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
 }
 
 export default function ShopManager() {
@@ -25,9 +28,9 @@ export default function ShopManager() {
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeMake, setActiveMake] = useState<string>('all');
   const [editingImage, setEditingImage] = useState<{ product: any; imageUrl: string; isCustom: boolean } | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
   const [showMediaGallery, setShowMediaGallery] = useState(false);
@@ -39,6 +42,8 @@ export default function ShopManager() {
     price: '',
     category: 'Cameras' as Product['category'],
     description: '',
+    vehicle_make: '',
+    vehicle_model: '',
     imageFile: null as File | null,
     preview: null as string | null,
     mobile_within_100: '',
@@ -73,7 +78,8 @@ export default function ShopManager() {
     setShowForm(false);
     setForm({
       name: '', base_price: '', price: '', category: 'Cameras',
-      description: '', imageFile: null, preview: null,
+      description: '', vehicle_make: '', vehicle_model: '',
+      imageFile: null, preview: null,
       mobile_within_100: '', mobile_over_100: '', garage: '',
     });
     setFormError('');
@@ -95,7 +101,6 @@ export default function ShopManager() {
       if (form.imageFile) {
         const ext = form.imageFile.name.split('.').pop();
         const fileName = `products/${Date.now()}.${ext}`;
-        
         const { error: uploadError } = await supabase.storage
           .from(STORAGE_BUCKET)
           .upload(fileName, form.imageFile, {
@@ -107,11 +112,12 @@ export default function ShopManager() {
           console.error('Upload error:', uploadError);
           throw new Error(uploadError.message);
         }
-
         const { data: { publicUrl } } = supabase.storage
           .from(STORAGE_BUCKET)
           .getPublicUrl(fileName);
         imageUrl = publicUrl;
+      } else if (form.preview) {
+        imageUrl = form.preview;
       }
 
       const { error: insertError } = await supabase
@@ -123,6 +129,8 @@ export default function ShopManager() {
           category: form.category,
           description: form.description.trim(),
           image_url: imageUrl,
+          vehicle_make: form.vehicle_make.trim(),
+          vehicle_model: form.vehicle_model.trim(),
           mobile_within_100: form.mobile_within_100.trim(),
           mobile_over_100: form.mobile_over_100.trim(),
           garage: form.garage.trim(),
@@ -149,7 +157,7 @@ export default function ShopManager() {
     setAdditions(prev => prev.filter(a => a.id !== item.id));
   };
 
-const handleDeleteBuiltin = async (id: string) => {
+  const handleDeleteBuiltin = async (id: string) => {
     if (!confirm('Hide this product from the shop?')) return;
     await supabase.from('hidden_items').insert({ content_type: 'product', item_id: String(id) });
     setHiddenIds(prev => [...prev, String(id)]);
@@ -161,41 +169,61 @@ const handleDeleteBuiltin = async (id: string) => {
 
   const handleSaveEditedImage = async (editedImageUrl: string) => {
     if (!editingImage) return;
-    
+
+    let finalUrl = editedImageUrl;
+
+    if (editedImageUrl.startsWith('data:')) {
+      try {
+        const res = await fetch(editedImageUrl);
+        const blob = await res.blob();
+        const ext = blob.type.split('/')[1] || 'jpg';
+        const fileName = `products/edited_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(fileName, blob, { cacheControl: '3600', upsert: false, contentType: blob.type });
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+          finalUrl = publicUrl;
+        }
+      } catch (err) {
+        console.error('Failed to upload edited image to storage:', err);
+      }
+    }
+
     if (editingImage.isCustom) {
-      // Update custom product image in database
-      await supabase.from('product_additions').update({ image_url: editedImageUrl }).eq('id', editingImage.product.id);
+      await supabase.from('product_additions').update({ image_url: finalUrl }).eq('id', editingImage.product.id);
     } else {
-      // Update built-in product image in hidden_items
+      const p = editingImage.product;
+      const basePrice = parseFloat((p.price ?? '0').replace('£', '').replace(',', '')) || 0;
+      const exVat = (basePrice / 1.2).toFixed(2);
+      await supabase.from('product_additions').insert({
+        name: p.name,
+        base_price: exVat,
+        price: p.price ?? '',
+        category: p.category ?? '',
+        description: p.description ?? '',
+        image_url: finalUrl,
+        mobile_within_100: '0',
+        mobile_over_100: '0',
+        garage: '0',
+      });
       await supabase.from('hidden_items').upsert({
-        content_type: 'product-edit',
-        item_id: String(editingImage.product.id),
-        metadata: { image: editedImageUrl }
+        content_type: 'product',
+        item_id: String(p.id),
       }, { onConflict: 'content_type,item_id' });
     }
-    
+
     fetchData();
     setEditingImage(null);
   };
 
-  const handleEditBuiltin = async (product: Product, updates: Partial<ProductAddition>) => {
-    await supabase.from('hidden_items').upsert({
-      content_type: 'product-edit',
-      item_id: product.id,
-      metadata: updates,
-    }, { onConflict: 'content_type,item_id' });
-    alert('Changes saved! (Note: Built-in product edits are stored in hidden_items for this demo)');
-  };
-
   const visibleBuiltin = PRODUCTS.filter(p => !hiddenIds.includes(p.id));
 
-  const filteredAdditions = activeCategory === 'all' 
-    ? additions 
-    : additions.filter(p => p.category === activeCategory);
-  
-  const filteredBuiltin = activeCategory === 'all'
-    ? visibleBuiltin
-    : visibleBuiltin.filter(p => p.category === activeCategory);
+  const matchesCat = (p: any) => activeCategory === 'all' || p.category === activeCategory;
+  const matchesMake = (p: any) => activeMake === 'all' || (p.vehicle_make || '').toLowerCase() === activeMake.toLowerCase();
+
+  const filteredAdditions = additions.filter(p => matchesCat(p) && matchesMake(p));
+  const filteredBuiltin = visibleBuiltin.filter(p => matchesCat(p) && matchesMake(p));
 
   return (
     <div>
@@ -232,22 +260,39 @@ const handleDeleteBuiltin = async (id: string) => {
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
+      {/* Make Filter */}
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+        <span className="text-white/20 text-[10px] uppercase tracking-widest self-center shrink-0">Make</span>
+        {['all', ...VAG_MAKES].map(make => (
+          <button
+            key={make}
+            onClick={() => setActiveMake(make)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
+              activeMake === make ? 'bg-brand text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
+            }`}
+          >
+            {make === 'all' ? 'All Makes' : make}
+          </button>
+        ))}
+      </div>
+
+      {/* Work Type Filter */}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+        <span className="text-white/20 text-[10px] uppercase tracking-widest self-center shrink-0">Type</span>
         <button
           onClick={() => setActiveCategory('all')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
-            activeCategory === 'all' ? 'bg-brand text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeCategory === 'all' ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
           }`}
         >
-          All
+          All Types
         </button>
         {CATEGORIES.map(cat => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
-              activeCategory === cat ? 'bg-brand text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
+              activeCategory === cat ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
             }`}
           >
             {cat}
@@ -306,6 +351,23 @@ const handleDeleteBuiltin = async (id: string) => {
                 </span>
               )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={form.vehicle_make}
+              onChange={e => setForm(p => ({ ...p, vehicle_make: e.target.value }))}
+              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white outline-none focus:border-brand transition-colors text-sm"
+            >
+              <option value="" className="bg-[#111]">Compatible Make (optional)</option>
+              {VAG_MAKES.map(m => <option key={m} value={m} className="bg-[#111]">{m}</option>)}
+            </select>
+            <input
+              value={form.vehicle_model}
+              onChange={e => setForm(p => ({ ...p, vehicle_model: e.target.value }))}
+              placeholder="Model (e.g. Golf MK7, optional)"
+              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder:text-white/30 outline-none focus:border-brand transition-colors text-sm"
+            />
           </div>
 
           <select
@@ -388,7 +450,6 @@ const handleDeleteBuiltin = async (id: string) => {
         ))}
       </div>
 
-      {/* Image Editor Modal */}
       {editingImage && (
         <ImageEditor
           image={editingImage.imageUrl}
@@ -411,26 +472,63 @@ const handleDeleteBuiltin = async (id: string) => {
 function ProductCard(props: any) {
   const { product, onDelete, onUpdate, onEditImage, viewMode = 'list' } = props;
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(product);
+  const [form, setForm] = useState({
+    name: product.name as string,
+    base_price: (product.base_price ?? '') as string,
+    category: (product.category ?? 'Cameras') as string,
+    description: (product.description ?? '') as string,
+    vehicle_make: (product.vehicle_make ?? '') as string,
+    vehicle_model: (product.vehicle_model ?? '') as string,
+    mobile_within_100: (product.mobile_within_100 ?? '') as string,
+    mobile_over_100: (product.mobile_over_100 ?? '') as string,
+    garage: (product.garage ?? '') as string,
+  });
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const calculateVAT = (amount: number) => (amount * 1.20).toFixed(2);
 
   const handleSave = async () => {
     setSaving(true);
-    const basePrice = parseFloat(form.base_price) || 0;
-    await supabase.from('product_additions').update({
-      name: form.name,
-      base_price: form.base_price,
-      price: `£${calculateVAT(basePrice)}`,
-      category: form.category,
-      description: form.description,
-      mobile_within_100: form.mobile_within_100 || '0',
-      mobile_over_100: form.mobile_over_100 || '0',
-      garage: form.garage || '0',
-      include_installation: form.includeInstallation !== false,
-    }).eq('id', product.id);
-    setSaving(false);
+    setFormError('');
+    try {
+      const basePrice = parseFloat(form.base_price) || 0;
+      const { error } = await supabase.from('product_additions').update({
+        name: form.name.trim(),
+        base_price: form.base_price.trim(),
+        price: `£${calculateVAT(basePrice)}`,
+        category: form.category,
+        description: form.description.trim(),
+        vehicle_make: form.vehicle_make.trim(),
+        vehicle_model: form.vehicle_model.trim(),
+        mobile_within_100: form.mobile_within_100.trim() || '0',
+        mobile_over_100: form.mobile_over_100.trim() || '0',
+        garage: form.garage.trim() || '0',
+      }).eq('id', product.id);
+      if (error) throw error;
+      setEditing(false);
+      onUpdate();
+    } catch (err: any) {
+      console.error('Update error:', err);
+      setFormError(err?.message || 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setForm({
+      name: product.name,
+      base_price: product.base_price ?? '',
+      category: product.category ?? 'Cameras',
+      description: product.description ?? '',
+      vehicle_make: product.vehicle_make ?? '',
+      vehicle_model: product.vehicle_model ?? '',
+      mobile_within_100: product.mobile_within_100 ?? '',
+      mobile_over_100: product.mobile_over_100 ?? '',
+      garage: product.garage ?? '',
+    });
+    setFormError('');
     setEditing(false);
     onUpdate();
   };
@@ -460,52 +558,62 @@ function ProductCard(props: any) {
             )}
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={form.vehicle_make}
+            onChange={e => setForm(p => ({ ...p, vehicle_make: e.target.value }))}
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-brand transition-colors"
+          >
+            <option value="" className="bg-[#111]">Select Make</option>
+            {VAG_MAKES.map(m => <option key={m} value={m} className="bg-[#111]">{m}</option>)}
+          </select>
           <input
-            type="checkbox"
-            id={`install-required-${product.id}`}
-            checked={form.includeInstallation !== false}
-            onChange={e => setForm(p => ({ ...p, includeInstallation: e.target.checked }))}
-            className="w-4 h-4 rounded bg-white/10 border-white/20"
+            value={form.vehicle_model}
+            onChange={e => setForm(p => ({ ...p, vehicle_model: e.target.value }))}
+            placeholder="Model (e.g. Golf MK7)"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-brand transition-colors"
           />
-          <label htmlFor={`install-required-${product.id}`} className="text-white/60 text-xs">
-            Include installation cost in total
-          </label>
         </div>
-        
-        {form.includeInstallation !== false && (
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-white/30 text-[10px] uppercase">Mobile &lt;100mi</label>
-              <input
-                value={form.mobile_within_100}
-                onChange={e => setForm(p => ({ ...p, mobile_within_100: e.target.value }))}
-                placeholder="0.00"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-white/30 text-[10px] uppercase">Mobile &gt;100mi</label>
-              <input
-                value={form.mobile_over_100}
-                onChange={e => setForm(p => ({ ...p, mobile_over_100: e.target.value }))}
-                placeholder="0.00"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-white/30 text-[10px] uppercase">Garage</label>
-              <input
-                value={form.garage}
-                onChange={e => setForm(p => ({ ...p, garage: e.target.value }))}
-                placeholder="0.00"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs"
-              />
-            </div>
+
+        <select
+          value={form.category}
+          onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-brand transition-colors"
+        >
+          {CATEGORIES.map(c => <option key={c} value={c} className="bg-[#111]">{c}</option>)}
+        </select>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="text-white/30 text-[10px] uppercase">Mobile &lt;100mi</label>
+            <input
+              value={form.mobile_within_100}
+              onChange={e => setForm(p => ({ ...p, mobile_within_100: e.target.value }))}
+              placeholder="0.00"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs"
+            />
           </div>
-        )}
-        
+          <div>
+            <label className="text-white/30 text-[10px] uppercase">Mobile &gt;100mi</label>
+            <input
+              value={form.mobile_over_100}
+              onChange={e => setForm(p => ({ ...p, mobile_over_100: e.target.value }))}
+              placeholder="0.00"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs"
+            />
+          </div>
+          <div>
+            <label className="text-white/30 text-[10px] uppercase">Garage</label>
+            <input
+              value={form.garage}
+              onChange={e => setForm(p => ({ ...p, garage: e.target.value }))}
+              placeholder="0.00"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs"
+            />
+          </div>
+        </div>
+
         <textarea
           value={form.description}
           onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
@@ -513,108 +621,19 @@ function ProductCard(props: any) {
           rows={2}
           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
         />
+        {formError && <p className="text-red-400 text-xs">{formError}</p>}
         <div className="flex gap-2">
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 bg-brand px-3 py-1.5 rounded text-white text-xs">
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
             Save
           </button>
-          <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded bg-white/5 text-white/50 text-xs">Cancel</button>
+          <button onClick={handleCancel} className="px-3 py-1.5 rounded bg-white/5 text-white/50 text-xs">Cancel</button>
         </div>
       </div>
     );
   }
 
   const basePrice = parseFloat(product.base_price) || 0;
-  const mobile100 = parseFloat(product.mobile_within_100) || 0;
-  const mobileOver100 = parseFloat(product.mobile_over_100) || 0;
-  const garage = parseFloat(product.garage) || 0;
-  const totalWithInstall = basePrice + mobile100;
-
-  if (editing) {
-    return (
-      <div className="bg-white/5 border border-brand/30 rounded-xl p-4 space-y-3">
-        <input
-          value={form.name}
-          onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm"
-          placeholder="Product name"
-        />
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30">£</span>
-          <input
-            value={form.base_price}
-            onChange={e => setForm(p => ({ ...p, base_price: e.target.value }))}
-            placeholder="0.00"
-            className="w-full bg-white/10 border border-white/20 rounded-lg pl-7 pr-3 py-2 text-white text-sm"
-          />
-          {form.base_price && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-400 text-xs">
-              = £{calculateVAT(parseFloat(form.base_price) || 0)} inc VAT
-            </span>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id={`install-required-${product.id}`}
-            checked={form.includeInstallation !== false}
-            onChange={e => setForm(p => ({ ...p, includeInstallation: e.target.checked }))}
-            className="w-4 h-4 rounded bg-white/10 border-white/20"
-          />
-          <label htmlFor={`install-required-${product.id}`} className="text-white/60 text-xs">
-            Include installation cost in total
-          </label>
-        </div>
-        
-        {form.includeInstallation !== false && (
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-white/30 text-[10px] uppercase">Mobile &lt;100mi</label>
-              <input
-                value={form.mobile_within_100}
-                onChange={e => setForm(p => ({ ...p, mobile_within_100: e.target.value }))}
-                placeholder="0.00"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-white/30 text-[10px] uppercase">Mobile &gt;100mi</label>
-              <input
-                value={form.mobile_over_100}
-                onChange={e => setForm(p => ({ ...p, mobile_over_100: e.target.value }))}
-                placeholder="0.00"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-white/30 text-[10px] uppercase">Garage</label>
-              <input
-                value={form.garage}
-                onChange={e => setForm(p => ({ ...p, garage: e.target.value }))}
-                placeholder="0.00"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-white text-xs"
-              />
-            </div>
-          </div>
-        )}
-        
-        <textarea
-          value={form.description}
-          onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-          placeholder="Description"
-          rows={2}
-          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm resize-none"
-        />
-        <div className="flex gap-2">
-          <button onClick={handleSave} disabled={saving} className="flex-1 bg-brand px-3 py-2 rounded-lg text-white text-sm">
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-          <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg bg-white/10 text-white/60 text-sm">Cancel</button>
-        </div>
-      </div>
-    );
-  }
 
   if (viewMode === 'list') {
     return (
@@ -622,10 +641,14 @@ function ProductCard(props: any) {
         <div className="w-32 h-32 shrink-0">
           <img src={product.image_url} alt={product.name} className="w-full h-full object-cover bg-white/10" loading="lazy" />
         </div>
-        <div className="flex-1 p-4 min-w-0 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-semibold text-white text-base truncate">{product.name}</span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">custom</span>
+        <div className="flex-1 p-3 sm:p-4 min-w-0 flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 mb-1 sm:mb-2 flex-wrap">
+            <span className="font-semibold text-white text-sm sm:text-base truncate">{product.name}</span>
+            {product.vehicle_make && (
+              <span className="text-[9px] font-bold uppercase tracking-widest bg-brand/10 text-brand px-1.5 py-0.5 rounded">
+                {product.vehicle_make}{product.vehicle_model ? ` ${product.vehicle_model}` : ''}
+              </span>
+            )}
             <span className="text-[9px] font-bold uppercase tracking-widest bg-white/10 text-white/60 px-1.5 py-0.5 rounded">{product.category}</span>
           </div>
           <div className="text-white/50 text-sm">
@@ -654,9 +677,14 @@ function ProductCard(props: any) {
         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover bg-white/10" loading="lazy" />
       </div>
       <div className="p-3">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <span className="font-semibold text-white text-sm">{product.name}</span>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">custom</span>
+          {product.vehicle_make && (
+            <span className="text-[9px] font-bold uppercase tracking-widest bg-brand/10 text-brand px-1.5 py-0.5 rounded">
+              {product.vehicle_make}{product.vehicle_model ? ` ${product.vehicle_model}` : ''}
+            </span>
+          )}
+          <span className="text-[9px] font-bold uppercase tracking-widest bg-white/10 text-white/60 px-1.5 py-0.5 rounded">{product.category}</span>
         </div>
         <div className="text-white/50 text-xs mb-2">
           <span className="font-medium text-brand">£{calculateVAT(basePrice)} inc VAT</span>
@@ -682,8 +710,8 @@ function ProductCard(props: any) {
 function BuiltinProductCard(props: any) {
   const { product, onHide, onUpdate, onEditImage, viewMode = 'list' } = props;
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ 
-    name: product.name, 
+  const [form, setForm] = useState({
+    name: product.name,
     description: product.description,
     price: product.price,
     category: product.category
@@ -691,7 +719,7 @@ function BuiltinProductCard(props: any) {
   const [saving, setSaving] = useState(false);
 
   const basePrice = parseFloat(product.price.replace('£', '').replace(',', '')) / 1.2;
-  
+
   const calculateVAT = (amount: number) => (amount * 1.20).toFixed(2);
 
   const handleSave = async () => {
@@ -733,7 +761,7 @@ function BuiltinProductCard(props: any) {
             />
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-3">
           <select
             value={form.category}
@@ -746,7 +774,7 @@ function BuiltinProductCard(props: any) {
             = £{calculateVAT(parseFloat(form.price.replace('£', '').replace(',', '')) || 0)} inc VAT
           </div>
         </div>
-        
+
         <textarea
           value={form.description}
           onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
@@ -754,7 +782,7 @@ function BuiltinProductCard(props: any) {
           rows={2}
           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
         />
-        
+
         <div className="text-white/30 text-xs">Changes saved to hidden_items table</div>
         <div className="flex gap-2">
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 bg-brand px-3 py-1.5 rounded text-white text-xs">

@@ -5,6 +5,7 @@ import { cn } from '../lib/utils';
 import { categories, CategoryId } from '../data/showcaseItems';
 import { useShowcaseItems } from '../hooks/useShowcaseItems';
 import { usePageSEO } from '../hooks/usePageSEO';
+import { VAG_MAKES } from '../data/vehicles';
 
 export default function Showcase() {
   usePageSEO({
@@ -20,11 +21,14 @@ export default function Showcase() {
     },
   });
   const [activeCategory, setActiveCategory] = useState<CategoryId>('all');
+  const [activeMake, setActiveMake] = useState<string>('all');
   const allItems = useShowcaseItems();
 
-  const filtered = activeCategory === 'all'
-    ? allItems
-    : allItems.filter(item => item.category === activeCategory);
+  const filtered = allItems.filter(item => {
+    const catMatch = activeCategory === 'all' || item.category === activeCategory;
+    const makeMatch = activeMake === 'all' || (item.vehicle_make || '').toLowerCase() === activeMake.toLowerCase();
+    return catMatch && makeMatch;
+  });
 
   return (
     <div className="pt-32 pb-24 px-6">
@@ -44,27 +48,42 @@ export default function Showcase() {
           </p>
         </motion.div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        {/* Make & Model Filter */}
+        <div className="flex flex-wrap justify-center gap-2 mb-4">
+          {['all', ...VAG_MAKES].map(make => (
+            <button
+              key={make}
+              onClick={() => setActiveMake(make)}
+              className={cn(
+                'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all border',
+                activeMake === make
+                  ? 'bg-brand border-brand text-white shadow-lg shadow-brand/20'
+                  : 'bg-[var(--card-bg)] border-[var(--border)] text-[var(--text)]/60 hover:border-brand/30'
+              )}
+            >
+              {make === 'all' ? 'All Makes' : make}
+            </button>
+          ))}
+        </div>
+
+        {/* Work Type Filter */}
+        <div className="flex flex-wrap justify-center gap-2 mb-12">
           {categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                'px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all border',
+                'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all border',
                 activeCategory === cat.id
-                  ? 'bg-brand border-brand text-white shadow-lg shadow-brand/20'
+                  ? 'bg-white/20 border-white/30 text-white shadow-lg'
                   : 'bg-[var(--card-bg)] border-[var(--border)] text-[var(--text)]/60 hover:border-brand/30'
               )}
             >
               {cat.name}
-              <span className={cn(
-                'ml-2 text-[10px] opacity-60',
-                activeCategory === cat.id && 'opacity-100'
-              )}>
+              <span className={cn('ml-1.5 text-[10px] opacity-60', activeCategory === cat.id && 'opacity-100')}>
                 {cat.id === 'all'
-                  ? allItems.length
-                  : allItems.filter(i => i.category === cat.id).length}
+                  ? allItems.filter(i => activeMake === 'all' || (i.vehicle_make || '').toLowerCase() === activeMake.toLowerCase()).length
+                  : allItems.filter(i => i.category === cat.id && (activeMake === 'all' || (i.vehicle_make || '').toLowerCase() === activeMake.toLowerCase())).length}
               </span>
             </button>
           ))}
@@ -92,8 +111,13 @@ export default function Showcase() {
                   />
                 </div>
 
-                {/* Always-visible category pill */}
-                <div className="absolute top-3 left-3">
+                {/* Always-visible pills */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1">
+                  {item.vehicle_make && (
+                    <span className="px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-brand/80 text-white backdrop-blur-sm">
+                      {item.vehicle_make}{item.vehicle_model ? ` ${item.vehicle_model}` : ''}
+                    </span>
+                  )}
                   <span className="px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-black/60 text-white/80 backdrop-blur-sm">
                     {item.category}
                   </span>

@@ -3,6 +3,7 @@ import { Plus, Trash2, Upload, X, Loader2, Edit2, Filter, LayoutGrid, List, Fold
 import { supabase, STORAGE_BUCKET } from '../../lib/supabase';
 import { galleryItems, CategoryId } from '../../data/showcaseItems';
 import MediaGallery from './MediaGallery';
+import { VAG_MAKES } from '../../data/vehicles';
 
 type ShowcaseCategory = Exclude<CategoryId, 'all'>;
 
@@ -20,23 +21,26 @@ interface ShowcaseAddition {
   category: ShowcaseCategory;
   description: string;
   image_url: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
 }
 
 interface ShowcaseEdit {
   content_type: string;
   item_id: string;
-  metadata: { title?: string; description?: string; category?: string };
+  metadata: { title?: string; description?: string; category?: string; vehicle_make?: string; vehicle_model?: string };
 }
 
 export default function ShowcaseManager() {
   const [additions, setAdditions] = useState<ShowcaseAddition[]>([]);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
-  const [edits, setEdits] = useState<Record<string, { title: string; description: string; category: string }>>({});
+  const [edits, setEdits] = useState<Record<string, { title: string; description: string; category: string; vehicle_make: string; vehicle_model: string }>>({});
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [activeCategory, setActiveCategory] = useState<ShowcaseCategory | 'all'>('all');
+  const [activeMake, setActiveMake] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -45,6 +49,8 @@ export default function ShowcaseManager() {
     title: '',
     category: 'exterior' as ShowcaseCategory,
     description: '',
+    vehicle_make: '',
+    vehicle_model: '',
     imageFile: null as File | null,
     preview: null as string | null,
   });
@@ -59,12 +65,14 @@ export default function ShowcaseManager() {
     setAdditions((adds ?? []) as ShowcaseAddition[]);
     setHiddenIds((hidden ?? []).map((h: { item_id: string }) => h.item_id));
     
-    const editMap: Record<string, { title: string; description: string; category: string }> = {};
+    const editMap: Record<string, { title: string; description: string; category: string; vehicle_make: string; vehicle_model: string }> = {};
     (editData as ShowcaseEdit[] | null)?.forEach(e => {
-      editMap[e.item_id] = { 
-        title: e.metadata?.title || '', 
+      editMap[e.item_id] = {
+        title: e.metadata?.title || '',
         description: e.metadata?.description || '',
-        category: e.metadata?.category || ''
+        category: e.metadata?.category || '',
+        vehicle_make: e.metadata?.vehicle_make || '',
+        vehicle_model: e.metadata?.vehicle_model || '',
       };
     });
     setEdits(editMap);
@@ -86,7 +94,7 @@ export default function ShowcaseManager() {
 
   const resetForm = () => {
     setShowForm(false);
-    setForm({ title: '', category: 'exterior', description: '', imageFile: null, preview: null });
+    setForm({ title: '', category: 'exterior', description: '', vehicle_make: '', vehicle_model: '', imageFile: null, preview: null });
     setFormError('');
   };
 
@@ -128,7 +136,14 @@ export default function ShowcaseManager() {
 
       const { error: insertError } = await supabase
         .from('showcase_additions')
-        .insert({ title: form.title.trim(), category: form.category, description: form.description.trim(), image_url: publicUrl });
+        .insert({
+          title: form.title.trim(),
+          category: form.category,
+          description: form.description.trim(),
+          image_url: publicUrl,
+          vehicle_make: form.vehicle_make.trim(),
+          vehicle_model: form.vehicle_model.trim(),
+        });
       if (insertError) throw insertError;
 
       resetForm();
@@ -160,13 +175,15 @@ export default function ShowcaseManager() {
   const handleSaveEdit = async (itemId: string) => {
     const edit = edits[itemId];
     if (!edit) return;
-    
+
     const item = additions.find(a => a.id === itemId);
     if (item) {
       await supabase.from('showcase_additions').update({
         title: edit.title,
         description: edit.description,
         category: edit.category as ShowcaseCategory,
+        vehicle_make: edit.vehicle_make,
+        vehicle_model: edit.vehicle_model,
       }).eq('id', itemId);
     } else {
       await supabase.from('hidden_items').upsert({
@@ -188,15 +205,16 @@ export default function ShowcaseManager() {
   };
 
   const getFilteredItems = () => {
-    const customFiltered = activeCategory === 'all' 
-      ? additions 
-      : additions.filter(item => getItemCategory(item) === activeCategory);
-    
-    const builtinFiltered = activeCategory === 'all'
-      ? visibleBuiltin
-      : visibleBuiltin.filter(item => getItemCategory(item) === activeCategory);
-    
-    return { custom: customFiltered, builtin: builtinFiltered };
+    const matchesCat = (item: any) => activeCategory === 'all' || getItemCategory(item) === activeCategory;
+    const matchesMake = (item: any) => {
+      if (activeMake === 'all') return true;
+      const make = (edits[item.id]?.vehicle_make || item.vehicle_make || '').toLowerCase();
+      return make === activeMake.toLowerCase();
+    };
+    return {
+      custom: additions.filter(i => matchesCat(i) && matchesMake(i)),
+      builtin: visibleBuiltin.filter(i => matchesCat(i) && matchesMake(i)),
+    };
   };
 
   const filtered = getFilteredItems();
@@ -235,25 +253,44 @@ export default function ShowcaseManager() {
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
+      {/* Make Filter */}
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+        <span className="text-white/20 text-[10px] uppercase tracking-widest self-center shrink-0">Make</span>
+        {['all', ...VAG_MAKES].map(make => (
+          <button
+            key={make}
+            onClick={() => setActiveMake(make)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
+              activeMake === make
+                ? 'bg-brand text-white'
+                : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
+            }`}
+          >
+            {make === 'all' ? 'All Makes' : make}
+          </button>
+        ))}
+      </div>
+
+      {/* Work Type Filter */}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+        <span className="text-white/20 text-[10px] uppercase tracking-widest self-center shrink-0">Work</span>
         <button
           onClick={() => setActiveCategory('all')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
-            activeCategory === 'all' 
-              ? 'bg-brand text-white' 
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeCategory === 'all'
+              ? 'bg-white/20 text-white'
               : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
           }`}
         >
-          All
+          All Work
         </button>
         {CATEGORIES.map(cat => (
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
-              activeCategory === cat.id 
-                ? 'bg-brand text-white' 
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
+              activeCategory === cat.id
+                ? 'bg-white/20 text-white'
                 : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
             }`}
           >
@@ -293,9 +330,26 @@ export default function ShowcaseManager() {
           <input
             value={form.title}
             onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-            placeholder="Title (e.g. VW Golf CarPlay Retrofit) *"
+            placeholder="Title (e.g. CarPlay Retrofit) *"
             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder:text-white/30 outline-none focus:border-brand transition-colors text-sm"
           />
+
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={form.vehicle_make}
+              onChange={e => setForm(p => ({ ...p, vehicle_make: e.target.value }))}
+              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white outline-none focus:border-brand transition-colors text-sm"
+            >
+              <option value="" className="bg-[#111]">Select Make</option>
+              {VAG_MAKES.map(m => <option key={m} value={m} className="bg-[#111]">{m}</option>)}
+            </select>
+            <input
+              value={form.vehicle_model}
+              onChange={e => setForm(p => ({ ...p, vehicle_model: e.target.value }))}
+              placeholder="Model (e.g. Golf MK7)"
+              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder:text-white/30 outline-none focus:border-brand transition-colors text-sm"
+            />
+          </div>
 
           <select
             value={form.category}
@@ -348,7 +402,7 @@ export default function ShowcaseManager() {
             item={item}
             onDelete={() => { handleDeleteAddition(item); }}
             editing={editingId === item.id}
-            edit={edits[item.id] || { title: item.title, description: item.description, category: item.category }}
+            edit={edits[item.id] || { title: item.title, description: item.description, category: item.category, vehicle_make: item.vehicle_make || '', vehicle_model: item.vehicle_model || '' }}
             onEdit={() => setEditingId(item.id)}
             onSave={() => { handleSaveEdit(item.id); }}
             onCancel={() => { setEditingId(null); }}
@@ -364,7 +418,7 @@ export default function ShowcaseManager() {
             item={item}
             onDelete={() => { handleDeleteBuiltin(String(item.id)); }}
             editing={editingId === String(item.id)}
-            edit={edits[String(item.id)] || { title: item.title, description: item.description, category: item.category }}
+            edit={edits[String(item.id)] || { title: item.title, description: item.description, category: item.category, vehicle_make: item.vehicle_make || '', vehicle_model: item.vehicle_model || '' }}
             onEdit={() => setEditingId(String(item.id))}
             onSave={() => { handleSaveEdit(String(item.id)); }}
             onCancel={() => { setEditingId(null); }}
@@ -401,7 +455,7 @@ function ShowcaseCard({
   item: any; 
   onDelete: () => void | Promise<void>; 
   editing: boolean;
-  edit: { title: string; description: string; category: string };
+  edit: { title: string; description: string; category: string; vehicle_make: string; vehicle_model: string };
   onEdit: () => void;
   onSave: () => void | Promise<void>;
   onCancel: () => void;
@@ -411,6 +465,8 @@ function ShowcaseCard({
   viewMode?: 'list' | 'card';
 }) {
   const currentCategory = categories.find(c => c.id === (edit.category || item.category));
+  const displayMake = edit.vehicle_make || item.vehicle_make || '';
+  const displayModel = edit.vehicle_model || item.vehicle_model || '';
 
   if (editing) {
     return (
@@ -421,6 +477,22 @@ function ShowcaseCard({
           className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm"
           placeholder="Title"
         />
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={edit.vehicle_make || ''}
+            onChange={e => onEditChange('vehicle_make', e.target.value)}
+            className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm"
+          >
+            <option value="" className="bg-[#111]">Select Make</option>
+            {VAG_MAKES.map(m => <option key={m} value={m} className="bg-[#111]">{m}</option>)}
+          </select>
+          <input
+            value={edit.vehicle_model || ''}
+            onChange={e => onEditChange('vehicle_model', e.target.value)}
+            placeholder="Model (e.g. Golf MK7)"
+            className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm"
+          />
+        </div>
         <select
           value={edit.category || item.category || 'exterior'}
           onChange={e => onEditChange('category', e.target.value)}
@@ -452,16 +524,18 @@ function ShowcaseCard({
           <img src={item.image_url || item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
         </div>
         <div className="flex-1 p-4 min-w-0 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-semibold text-white text-base truncate">{item.title}</span>
+            {displayMake && (
+              <span className="text-[9px] font-bold uppercase tracking-widest bg-brand/10 text-brand px-1.5 py-0.5 rounded shrink-0">
+                {displayMake}{displayModel ? ` ${displayModel}` : ''}
+              </span>
+            )}
             {currentCategory && (
               <span className="text-[9px] font-bold uppercase tracking-widest bg-white/10 text-white/60 px-1.5 py-0.5 rounded shrink-0">
                 {currentCategory.name}
               </span>
             )}
-            <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shrink-0 ${isCustom ? 'text-emerald-400 bg-emerald-400/10' : 'text-brand bg-brand/10'}`}>
-              {isCustom ? 'custom' : 'builtin'}
-            </span>
           </div>
           <p className="text-white/50 text-sm line-clamp-2">{item.description}</p>
         </div>
@@ -483,8 +557,13 @@ function ShowcaseCard({
         <img src={item.image_url || item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
       </div>
       <div className="p-3">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
           <span className="font-semibold text-white text-sm">{item.title}</span>
+          {displayMake && (
+            <span className="text-[9px] font-bold uppercase tracking-widest bg-brand/10 text-brand px-1.5 py-0.5 rounded">
+              {displayMake}{displayModel ? ` ${displayModel}` : ''}
+            </span>
+          )}
           {currentCategory && (
             <span className="text-[9px] font-bold uppercase tracking-widest bg-white/10 text-white/60 px-1.5 py-0.5 rounded">
               {currentCategory.name}

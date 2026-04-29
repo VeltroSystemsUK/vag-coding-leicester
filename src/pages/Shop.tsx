@@ -7,6 +7,7 @@ import { useProducts } from '../hooks/useProducts';
 import { cn } from '../lib/utils';
 import { useCart } from '../lib/CartContext';
 import { PaymentIcons } from '../components/PaymentIcons';
+import { VAG_MAKES } from '../data/vehicles';
 
 const categories = ['All', 'Cameras', 'Retrofits', 'Repairs', 'Parts'] as const;
 
@@ -44,7 +45,8 @@ export default function Shop() {
       ],
     },
   });
-  const [activeCategory, setActiveCategory] = useState<typeof categories[number]>('All');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [activeMake, setActiveMake] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [addedId, setAddedId] = useState<string | null>(null);
@@ -59,9 +61,10 @@ export default function Shop() {
 
   const filteredProducts = allProducts.filter((product) => {
     const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
+    const matchesMake = activeMake === 'all' || (product.vehicle_make || '').toLowerCase() === activeMake.toLowerCase();
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesMake && matchesSearch;
   });
 
   return (
@@ -140,7 +143,28 @@ export default function Shop() {
           </motion.div>
         </div>
 
-        {/* Category Filters */}
+        {/* Make Filter */}
+        <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+          {['all', ...VAG_MAKES].map((make, index) => (
+            <motion.button
+              key={make}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.04 }}
+              onClick={() => setActiveMake(make)}
+              className={cn(
+                "px-5 py-2 rounded-xl text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                activeMake === make
+                  ? "bg-brand text-white shadow-lg shadow-brand/20 scale-105"
+                  : "bg-white/50 dark:bg-white/5 text-black/60 dark:text-white/60 hover:bg-brand/10 hover:text-brand"
+              )}
+            >
+              {make === 'all' ? 'All Makes' : make}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Work Type Filter */}
         <div className="flex flex-wrap gap-2 mb-12 overflow-x-auto pb-4 scrollbar-hide">
           {categories.map((category, index) => (
             <motion.button
@@ -152,8 +176,8 @@ export default function Shop() {
               className={cn(
                 "px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap",
                 activeCategory === category
-                  ? "bg-brand text-white shadow-lg shadow-brand/20 scale-105"
-                    : "bg-white/50 dark:bg-white/5 text-black/60 dark:text-white/60 hover:bg-brand/10 hover:text-brand"
+                  ? "bg-white/80 dark:bg-white/20 text-black dark:text-white shadow-lg scale-105"
+                  : "bg-white/50 dark:bg-white/5 text-black/60 dark:text-white/60 hover:bg-brand/10 hover:text-brand"
               )}
             >
               {category}
@@ -193,9 +217,16 @@ export default function Shop() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-vw-blue/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    {/* Category Badge */}
-                    <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-widest text-white">
-                      {product.category}
+                    {/* Badges */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-1 items-end">
+                      {product.vehicle_make && (
+                        <div className="px-3 py-1 rounded-full bg-brand/80 backdrop-blur-md border border-brand/40 text-[10px] font-bold uppercase tracking-widest text-white">
+                          {product.vehicle_make}{product.vehicle_model ? ` ${product.vehicle_model}` : ''}
+                        </div>
+                      )}
+                      <div className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold uppercase tracking-widest text-white">
+                        {product.category}
+                      </div>
                     </div>
                   </div>
 
@@ -284,7 +315,7 @@ export default function Shop() {
              <h3 className="text-2xl font-bold text-black dark:text-white mb-2">No products found</h3>
              <p className="text-black/60 dark:text-white/60">Try adjusting your filters or search terms.</p>
             <button
-              onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
+              onClick={() => { setActiveCategory('All'); setActiveMake('all'); setSearchQuery(''); }}
               className="mt-6 text-brand font-bold uppercase tracking-widest flex items-center gap-2 mx-auto hover:gap-3 transition-all"
             >
               Clear all filters <ChevronRight className="w-4 h-4" />

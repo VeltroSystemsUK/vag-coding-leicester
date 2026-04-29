@@ -9,6 +9,8 @@ interface ShowcaseAddition {
   category: Exclude<CategoryId, 'all'>;
   description: string;
   image_url: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
 }
 
 export function useShowcaseItems(): GalleryItem[] {
@@ -55,6 +57,8 @@ export function useShowcaseItems(): GalleryItem[] {
       description: a.description,
       image: a.image_url,
       icon: Camera,
+      vehicle_make: a.vehicle_make,
+      vehicle_model: a.vehicle_model,
     })),
   ];
 }

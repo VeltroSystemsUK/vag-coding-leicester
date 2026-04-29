@@ -9,6 +9,8 @@ export interface GalleryItem {
   image: string;
   description: string;
   icon: LucideIcon;
+  vehicle_make?: string;
+  vehicle_model?: string;
 }
 
 export const categories: { id: CategoryId; name: string }[] = [

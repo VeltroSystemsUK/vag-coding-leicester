@@ -6,6 +6,8 @@ export interface Product {
   image: string;
   description: string;
   condition: 'new' | 'used';
+  vehicle_make?: string;
+  vehicle_model?: string;
 }
 
 export const PRODUCTS: Product[] = [];
