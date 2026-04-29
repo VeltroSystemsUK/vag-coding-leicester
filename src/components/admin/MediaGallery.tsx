@@ -34,6 +34,7 @@ export default function MediaGallery({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
   const [uploadProgress, setUploadProgress] = useState<{ total: number; done: number } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const loadImages = useCallback(async () => {
@@ -116,19 +117,18 @@ export default function MediaGallery({
     loadImages();
   }, [loadImages]);
 
-  const handleBulkUpload = async (files: FileList) => {
-    if (!files.length) return;
+  const handleBulkUpload = async (files: FileList | File[]) => {
+    const fileArr = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!fileArr.length) return;
     setUploading(true);
-    setUploadProgress({ total: files.length, done: 0 });
+    setError('');
+    setUploadProgress({ total: fileArr.length, done: 0 });
 
     const uploaded: string[] = [];
-    let hasError = false;
+    const errors: string[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
-
-      const ext = file.name.split('.').pop() || 'jpg';
+    for (let i = 0; i < fileArr.length; i++) {
+      const file = fileArr[i];
       const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const fileName = `media/${Date.now()}_${i}_${cleanName}`;
 
@@ -137,21 +137,21 @@ export default function MediaGallery({
           .from(STORAGE_BUCKET)
           .upload(fileName, file, {
             cacheControl: '3600',
-            upsert: false,
-            contentType: file.type,
+            upsert: true,
+            contentType: file.type || 'image/jpeg',
           });
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          hasError = true;
+          errors.push(`${file.name}: ${uploadError.message}`);
         } else {
           uploaded.push(fileName);
         }
-      } catch (e) {
-        hasError = true;
+      } catch (e: any) {
+        errors.push(`${file.name}: ${e?.message || 'Unknown error'}`);
       }
 
-      setUploadProgress(prev => prev ? { ...prev, done: prev.done + 1 } : null);
+      setUploadProgress(prev => prev ? { ...prev, done: i + 1 } : null);
     }
 
     setUploadProgress(null);
@@ -165,8 +165,8 @@ export default function MediaGallery({
       }
     }
 
-    if (hasError) {
-      setError('Some files failed to upload. Check console for details.');
+    if (errors.length > 0) {
+      setError(`${errors.length} file(s) failed: ${errors[0]}${errors.length > 1 ? ` (+${errors.length - 1} more)` : ''}`);
     }
   };
 
@@ -174,6 +174,12 @@ export default function MediaGallery({
     const files = e.target.files;
     if (files) handleBulkUpload(files);
     e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files.length) handleBulkUpload(e.dataTransfer.files);
   };
 
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -354,20 +360,31 @@ export default function MediaGallery({
           <Loader2 className="w-8 h-8 text-brand animate-spin" />
         </div>
       ) : filteredImages.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-white/30 gap-3">
-          <ImageIcon className="w-12 h-12" />
-          <span className="text-sm">{search ? 'No images match your search' : 'No images uploaded yet'}</span>
-          {!search && (
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="text-brand text-xs font-bold uppercase tracking-widest hover:underline"
-            >
-              Upload your first image
-            </button>
-          )}
+        <div
+          onDrop={handleDrop}
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onClick={() => fileRef.current?.click()}
+          className={`flex-1 flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl cursor-pointer transition-colors ${
+            dragOver ? 'border-brand bg-brand/10 text-brand' : 'border-white/20 text-white/30 hover:border-brand/50'
+          }`}
+        >
+          <Upload className="w-12 h-12" />
+          <span className="text-sm font-medium">{search ? 'No images match your search' : 'Drop images here or click to upload'}</span>
+          {!search && <span className="text-xs opacity-60">Supports bulk selection</span>}
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className="flex-1 overflow-y-auto relative"
+          onDrop={handleDrop}
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+        >
+          {dragOver && (
+            <div className="absolute inset-0 z-10 bg-brand/20 border-2 border-dashed border-brand rounded-2xl flex items-center justify-center pointer-events-none">
+              <span className="text-brand font-bold text-lg">Drop to upload</span>
+            </div>
+          )}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {filteredImages.map(item => (
               <div
