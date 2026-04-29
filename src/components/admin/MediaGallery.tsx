@@ -35,6 +35,7 @@ export default function MediaGallery({
   const [search, setSearch] = useState('');
   const [uploadProgress, setUploadProgress] = useState<{ total: number; done: number } | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'shop' | 'showcase'>('all');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const loadImages = useCallback(async () => {
@@ -117,6 +118,8 @@ export default function MediaGallery({
     loadImages();
   }, [loadImages]);
 
+  const uploadFolder = activeTab === 'shop' ? 'products' : activeTab === 'showcase' ? 'showcase' : 'media';
+
   const handleBulkUpload = async (files: FileList | File[]) => {
     const fileArr = Array.from(files).filter(f => f.type.startsWith('image/'));
     if (!fileArr.length) return;
@@ -130,7 +133,7 @@ export default function MediaGallery({
     for (let i = 0; i < fileArr.length; i++) {
       const file = fileArr[i];
       const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileName = `media/${Date.now()}_${i}_${cleanName}`;
+      const fileName = `${uploadFolder}/${Date.now()}_${i}_${cleanName}`;
 
       try {
         const { error: uploadError } = await supabase.storage
@@ -270,9 +273,15 @@ export default function MediaGallery({
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const filteredImages = search
-    ? images.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+  const tabImages = activeTab === 'shop'
+    ? images.filter(i => i.path.startsWith('products/'))
+    : activeTab === 'showcase'
+    ? images.filter(i => i.path.startsWith('showcase/'))
     : images;
+
+  const filteredImages = search
+    ? tabImages.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+    : tabImages;
 
   const content = (
     <div className={isModal ? 'flex flex-col h-full' : 'flex flex-col h-[calc(100vh-200px)]'}>
@@ -281,7 +290,7 @@ export default function MediaGallery({
           <FolderOpen className="w-5 h-5 text-brand" />
           <h3 className="text-white font-bold text-lg">Media Gallery</h3>
           <span className="text-white/30 text-xs font-medium">
-            {images.length} {images.length === 1 ? 'image' : 'images'}
+            {filteredImages.length} {filteredImages.length === 1 ? 'image' : 'images'}
           </span>
         </div>
 
@@ -332,6 +341,30 @@ export default function MediaGallery({
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 mb-4 bg-white/5 p-1 rounded-xl w-fit">
+        {([
+          { id: 'all', label: 'All', count: images.length },
+          { id: 'shop', label: 'Shop', count: images.filter(i => i.path.startsWith('products/')).length },
+          { id: 'showcase', label: 'Showcase', count: images.filter(i => i.path.startsWith('showcase/')).length },
+        ] as const).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-1.5 ${
+              activeTab === tab.id
+                ? 'bg-brand text-white shadow'
+                : 'text-white/40 hover:text-white'
+            }`}
+          >
+            {tab.label}
+            <span className={`text-[10px] ${activeTab === tab.id ? 'opacity-80' : 'opacity-50'}`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {uploadProgress && (
         <div className="mb-4 bg-white/5 border border-brand/30 rounded-lg p-3">
           <div className="flex items-center justify-between mb-2">
@@ -371,7 +404,7 @@ export default function MediaGallery({
         >
           <Upload className="w-12 h-12" />
           <span className="text-sm font-medium">{search ? 'No images match your search' : 'Drop images here or click to upload'}</span>
-          {!search && <span className="text-xs opacity-60">Supports bulk selection</span>}
+          {!search && <span className="text-xs opacity-60">Uploads go into {uploadFolder}/</span>}
         </div>
       ) : viewMode === 'grid' ? (
         <div
